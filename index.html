@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#2b1232">
 <meta name="description" content="KIANA STUDIO — boutique de tenues, créations sur mesure, collections et rendez-vous.">
 <title>KIANA STUDIO · Your Look, Your Rules</title>
-<link rel="stylesheet" href="kiana-v8.css?v=8">
-<script src="kiana-v8-core.js?v=8" defer></script>
-<script src="kiana-v8-admin.js?v=8" defer></script>
+<link rel="stylesheet" href="kiana-v8.css?v=8"><link rel="stylesheet" href="kiana-v9.css?v=9">
+<script src="kiana-v8-core.js?v=9" defer></script>
+<script src="kiana-v8-admin.js?v=9" defer></script>
 </head>
 <body>
 <header class="topbar" id="topbar">
@@ -17,7 +17,8 @@
   <div class="navlinks">
    <a href="#home" data-page="home">Accueil</a>
    <a href="#shop" data-page="shop">Boutique</a><a href="#portfolio" data-page="portfolio">Lookbook</a>
-   <a href="#commission" data-action="order-custom" data-page="commission">Sur mesure</a>
+   <a href="#commission" data-action="order-custom" data-page="commission">Sur mesure à distance</a>
+   <a href="#cart" data-page="cart" class="cart-nav" aria-label="Ouvrir le panier">PANIER <span id="nav-cart-count" class="cart-count">0</span></a>
    <a href="#tracking" data-page="tracking">Suivi</a>
    <a href="#booking" data-page="booking">Rendez-vous</a>
    <a href="#about" data-page="about">À propos</a>
@@ -29,6 +30,7 @@
   <a href="#home" data-page="home">Accueil</a>
   <a href="#shop" data-page="shop">Boutique</a><a href="#portfolio" data-page="portfolio">Lookbook</a>
   <a href="#commission" data-action="order-custom" data-page="commission">Sur mesure</a>
+  <a href="#cart" data-page="cart">Panier (<span id="mobile-cart-count">0</span>)</a>
   <a href="#tracking" data-page="tracking">Suivi</a>
   <a href="#booking" data-page="booking">Rendez-vous</a>
   <a href="#about" data-page="about">À propos</a>
@@ -45,8 +47,8 @@
     <div class="just-look">JUST LOOK <b>✦</b></div>
     <p id="hero-intro">Un univers mode où chaque détail compte.</p>
     <div class="hero-actions">
-     <a href="#shop" class="btn btn-primary">EXPLORER LES LOOKS ↗</a>
-     <a href="#commission" data-action="order-custom" class="btn btn-outline">CRÉER MA TENUE ♡</a>
+     <a href="#shop" class="btn btn-primary">DÉCOUVRIR LA BOUTIQUE ↗</a>
+     <a href="#commission" data-action="order-custom" class="btn btn-outline">TENUE SUR MESURE À DISTANCE ♡</a>
     </div>
    </div>
    <div class="hero-aside">
@@ -57,31 +59,15 @@
   </div>
  </div>
  <div class="announcement">FASHION FIRST <span>✦</span> EXPRESS YOURSELF <span>✦</span> KIANA STUDIO</div>
- <section class="section-tight">
+ <section class="section-tight"><div class="container"><div class="steps" aria-label="Les services du studio">
+<div class="step"><span>01.</span><strong>La boutique</strong><small>Ajoute autant de tenues que tu veux au panier.</small></div>
+<div class="step"><span>02.</span><strong>Ton panier</strong><small>Choisis les quantités et valide les tenues.</small></div>
+<div class="step"><span>03.</span><strong>Sur mesure</strong><small>Demande une création à distance, sans être présent.</small></div>
+<div class="step"><span>04.</span><strong>Rendez-vous</strong><small>Viens rencontrer Kiana en personne.</small></div>
+</div></div></section>
+<section class="section">
   <div class="container">
-   <div class="steps" aria-label="Comment commander">
-    <div class="step"><span>01.</span><strong>Découvre</strong><small>Choisis une tenue ou pars de zéro.</small></div>
-    <div class="step"><span>02.</span><strong>Personnalise</strong><small>Couleur, accessoires et envies.</small></div>
-    <div class="step"><span>03.</span><strong>Commande</strong><small>Un reçu avec un numéro simple.</small></div>
-    <div class="step"><span>04.</span><strong>Suis</strong><small>En préparation, puis livrée.</small></div>
-   </div>
-  </div>
- </section>
- <section class="section" id="collections">
-  <div class="container">
-   <div class="section-header"><span class="eyebrow">THE CAPSULE COLLECTIONS</span><h2>Find your fashion era.</h2><p>Trois univers différents, une seule règle : avoir du style.</p></div>
-   <div class="capsules" id="home-capsules"></div>
-  </div>
- </section>
- <section class="section" id="monthly-feature">
-  <div class="container">
-   <div class="section-header"><span class="eyebrow">THE MONTHLY EDIT</span><h2>Look du mois ✦</h2><p>La création mise en lumière ce mois-ci.</p></div>
-   <div class="month" id="home-month"></div>
-  </div>
- </section>
- <section class="section">
-  <div class="container">
-   <div class="section-header"><span class="eyebrow">KIANA'S FAVORITES</span><h2>Les coups de cœur ♡</h2><p>Quelques tenues à découvrir avant de créer la tienne.</p></div>
+   <div class="section-header"><span class="eyebrow">THE KIANA WARDROBE</span><h2>Les dernières tenues ✦</h2><p>Découvre quelques créations disponibles dans la boutique.</p></div>
    <div class="looks-grid" id="home-looks"></div>
    <div style="text-align:center;margin-top:30px"><a href="#shop" class="btn btn-primary">TOUT LE DRESSING ↗</a></div>
   </div>
@@ -91,7 +77,7 @@
   <div class="container" style="text-align:center;max-width:790px">
    <span class="eyebrow">THE PRIVATE ATELIER</span>
    <h2 class="display" style="font-size:clamp(2.9rem,6vw,5.1rem);margin:14px 0">Une tenue qui te ressemble.</h2>
-   <p class="muted" style="line-height:1.9">Tu as une idée précise ou tu préfères laisser carte blanche ? Décris ton style, choisis ta couleur et laisse le studio faire le reste.</p>
+   <p class="muted" style="line-height:1.9">Tu ne peux pas être présent ? Demande une tenue sur mesure à distance. Pour une rencontre en personne, utilise la page Rendez-vous.</p>
    <button class="btn btn-primary" data-action="order-custom" style="margin-top:10px">FAIRE UNE DEMANDE SUR MESURE ↗</button>
   </div>
  </section>
@@ -99,44 +85,44 @@
 
 <section class="view" id="view-shop">
  <div class="section container">
-  <div class="section-header"><span class="eyebrow">THE KIANA WARDROBE</span><h2>La boutique ♡</h2><p>Choisis ta tenue de départ et personnalise-la ensuite dans l’atelier.</p></div>
+  <div class="section-header"><span class="eyebrow">THE KIANA WARDROBE</span><h2>La boutique ♡</h2><p>Ajoute plusieurs tenues au panier, choisis tes quantités et valide ta commande en une seule fois.</p></div>
   <div class="toolbar">
    <input class="field" id="shop-search" type="search" placeholder="Rechercher un look..." aria-label="Rechercher une tenue">
    <select class="field" id="shop-sort" aria-label="Trier les tenues" style="width:240px">
-    <option value="featured">Coups de cœur d’abord</option><option value="price-low">Prix croissant</option><option value="price-high">Prix décroissant</option>
+    <option value="featured">Toutes les tenues</option><option value="price-low">Prix croissant</option><option value="price-high">Prix décroissant</option>
    </select>
   </div>
-  <div class="chips" id="shop-filters"></div>
+
   <p class="muted" style="font-size:.78rem" id="shop-result-count"></p>
   <div class="looks-grid" id="shop-looks"></div>
   <div class="panel" style="margin-top:40px;text-align:center">
-   <span class="eyebrow">PAS TROUVÉ TON STYLE ?</span><h3 class="serif" style="font-size:2rem;margin:14px">Créons ta tenue ensemble.</h3>
-   <button class="btn btn-primary" data-action="order-custom">PASSER EN SUR MESURE ↗</button>
+   <span class="eyebrow">PAS TROUVÉ TON STYLE ?</span><h3 class="serif" style="font-size:2rem;margin:14px">Tu veux quelque chose de vraiment unique ?</h3>
+   <button class="btn btn-primary" data-action="order-custom">DEMANDER UNE TENUE À DISTANCE ↗</button>
   </div>
  </div>
 </section>
 
-<section class="view" id="view-portfolio"><div class="section container"><div class="section-header"><span class="eyebrow">THE FASHION DIARY</span><h2>Le lookbook ♡</h2><p>Les inspirations et les créations du studio, comme un carnet de mode à feuilleter.</p></div><div id="portfolio-grid" class="polaroids"></div><div class="panel" style="margin-top:45px;text-align:center"><span class="eyebrow">TON PROCHAIN LOOK COMMENCE ICI</span><h3 class="serif" style="font-size:2rem;margin:13px">Une idée pour toi ?</h3><button class="btn btn-primary" data-action="order-custom">CRÉER MA TENUE ↗</button></div></div></section>
+<section class="view" id="view-cart"><div class="section container">
+<div class="section-header"><span class="eyebrow">YOUR FASHION BAG</span><h2>Mon panier ♡</h2><p>Toutes tes tenues, au même endroit. Ajuste les quantités avant de valider la commande.</p></div>
+<div class="cart-layout"><div id="cart-items" class="cart-items"></div>
+<aside class="panel cart-summary">
+<h3 class="serif" style="font-size:1.9rem">Ma commande</h3><div id="cart-totals"></div>
+<form id="cart-checkout-form"><label class="field-label" for="cart-name">Nom et prénom *</label><input id="cart-name" class="field" maxlength="70" required placeholder="Prénom Nom">
+<label class="field-label" for="cart-phone">Numéro de téléphone *</label><input id="cart-phone" type="tel" inputmode="tel" class="field" maxlength="24" required placeholder="555-0123">
+<label class="field-label" for="cart-note">Précisions (facultatif)</label><textarea class="field" id="cart-note" rows="3" maxlength="1200" placeholder="Informations utiles pour Kiana..."></textarea>
+<button class="btn btn-primary btn-block" type="submit" id="cart-checkout-button" style="margin-top:17px">VALIDER LES TENUES ↗</button></form>
+<p class="help" style="margin-top:16px">Tu obtiendras un reçu COMMANDE-01, COMMANDE-02… à transmettre à Kiana. Cette démo n'envoie pas encore de commandes automatiquement.</p></aside></div>
+</div></section>
+
+<section class="view" id="view-portfolio"><div class="section container"><div class="section-header"><span class="eyebrow">THE FASHION DIARY</span><h2>Le lookbook ♡</h2><p>Une galerie de photos et de réalisations à admirer. Ces photos ne sont pas à acheter : les tenues disponibles sont uniquement dans la boutique.</p></div><div id="portfolio-grid" class="polaroids"></div><div class="panel" style="margin-top:45px;text-align:center"><span class="eyebrow">TON PROCHAIN LOOK COMMENCE ICI</span><h3 class="serif" style="font-size:2rem;margin:13px">Une idée pour toi ?</h3><button class="btn btn-primary" data-action="order-custom">CRÉER MA TENUE ↗</button></div></div></section>
 
 <section class="view" id="view-commission">
  <div class="section container">
-  <div class="section-header"><span class="eyebrow">YOUR STYLE · YOUR RULES</span><h2>L’atelier de création.</h2><p>Un seul formulaire, que tu partes d’un look existant ou d’une idée totalement nouvelle.</p></div>
+  <div class="section-header"><span class="eyebrow">YOUR STYLE · YOUR RULES</span><h2>Sur mesure, à distance.</h2><p>Une demande de création que Kiana réalise sans que tu sois présent. Tu envoies tes envies, ta couleur et tes détails. Pour être présent avec elle, prends un rendez-vous.</p></div>
   <div class="order-layout">
    <form class="panel" id="order-form">
-    <div class="order-section">
-     <span class="numberline">ÉTAPE 01 / TON POINT DE DÉPART</span><h3>On commence comment ?</h3>
-     <div class="choice-grid">
-      <button type="button" class="choice" id="source-catalog" data-action="source" data-id="catalog"><strong>♡ Un look existant</strong><small>Je choisis une tenue du catalogue, puis je la personnalise.</small></button>
-      <button type="button" class="choice active" id="source-custom" data-action="source" data-id="custom"><strong>✦ Une création</strong><small>Je pars de zéro pour une tenue unique.</small></button>
-     </div>
-     <div id="look-select-wrap" hidden><label class="field-label" for="source-select">Quel look souhaites-tu ?</label><select class="field" id="source-select" aria-label="Look du catalogue"></select></div>
-     <p id="order-source-summary" class="help"></p>
-     <label class="field-label" for="order-service">Quel service souhaites-tu ?</label>
-     <select class="field" id="order-service"></select>
-     <div id="order-other-wrap" hidden><label class="field-label" for="order-other">Précise ton service</label><input class="field" id="order-other" maxlength="150" placeholder="Explique ce que tu recherches"></div>
-    </div>
-    <div class="order-section">
-     <span class="numberline">ÉTAPE 02 / LIBERTÉ OU PERSONNALISATION</span><h3>Qui choisit les détails ?</h3>
+    <div class="order-section"><span class="numberline">ÉTAPE 01 / DEMANDE À DISTANCE</span><h3>Quel service souhaites-tu ?</h3><p class="help">Kiana prépare cette création sans rendez-vous ni présence de ton personnage.</p><label class="field-label" for="order-service">Prestation</label><select class="field" id="order-service"></select><div id="order-other-wrap" hidden><label class="field-label" for="order-other">Précise ton service</label><input class="field" id="order-other" maxlength="150"></div></div>
+    <div class="order-section"><span class="numberline">ÉTAPE 02 / LIBERTÉ OU PERSONNALISATION</span><h3>Qui choisit les détails ?</h3>
      <div class="choice-grid">
       <button type="button" class="choice active" id="mode-free" data-action="mode" data-id="free"><strong>Choix libre</strong><small>Tu me laisses composer le look, en respectant tes envies.</small></button>
       <button type="button" class="choice" id="mode-custom" data-action="mode" data-id="custom"><strong>Customisation</strong><small>Tu indiques exactement les accessoires souhaités.</small></button>
@@ -168,7 +154,7 @@
     </div>
    </form>
    <aside class="panel order-aside">
-    <span class="eyebrow">THE STYLE SUMMARY</span><h3 id="order-summary-name">Création sur mesure</h3>
+    <span class="eyebrow">CRÉATION À DISTANCE</span><h3 id="order-summary-name">Création sur mesure</h3>
     <p id="order-summary-info"></p><strong class="price" id="order-summary-price">Tarif à définir</strong>
     <div class="notice" style="margin-top:25px">Après validation : un reçu <strong>COMMANDE-01</strong>, puis un suivi avec numéro de téléphone et de commande.</div>
     <p class="help" style="margin-top:18px">Le site fonctionne encore en démonstration locale : les commandes ne parviennent pas automatiquement à la fondatrice.</p>
@@ -193,7 +179,7 @@
 
 <section class="view" id="view-booking">
  <div class="section container">
-  <div class="section-header"><span class="eyebrow">BOOK YOUR MOMENT</span><h2>Rendez-vous ♡</h2><p>Prépare une demande pour un échange mode. L'horaire est une préférence, pas une réservation confirmée.</p></div>
+  <div class="section-header"><span class="eyebrow">BOOK YOUR MOMENT</span><h2>Rendez-vous en personne ♡</h2><p>Tu seras présent avec Kiana pour discuter, créer ou ajuster ta tenue ensemble. Choisis une date et une heure souhaitées : la rencontre doit encore être confirmée.</p></div>
   <div class="order-layout">
    <form class="panel" id="booking-form">
     <label class="field-label" for="booking-name">Nom et prénom</label><input class="field" id="booking-name" required maxlength="70" placeholder="Prénom Nom">
@@ -203,7 +189,7 @@
     <label class="field-label" for="booking-note">Précisions</label><textarea class="field" rows="4" id="booking-note" placeholder="Ce que tu aimerais préparer..."></textarea>
     <button class="btn btn-primary" type="submit" style="margin-top:20px">PRÉPARER LA DEMANDE ↗</button>
    </form>
-   <div class="panel order-aside"><span class="eyebrow">YOUR MAIN CHARACTER MOMENT</span><h3>Une idée ? Parlons style.</h3><p>Prépare ton message puis copie-le pour l'envoyer à Kiana.</p><div class="notice">Aucun rendez-vous n’est transmis ni confirmé automatiquement depuis cette démonstration.</div></div>
+   <div class="panel order-aside"><span class="eyebrow">YOUR MAIN CHARACTER MOMENT</span><h3>Une vraie rencontre avec Kiana.</h3><p>Le rendez-vous implique ta présence. Pour une création sans venir, utilise Sur mesure à distance.</p><div class="notice">Aucun rendez-vous n’est transmis ni confirmé automatiquement depuis cette démonstration.</div></div>
   </div>
  </div>
 </section>
@@ -233,7 +219,6 @@
     <button class="admin-link" data-admin-tab="overview" data-action="admin-tab" data-id="overview">⌂ Tableau de bord</button>
     <button class="admin-link" data-admin-tab="looks" data-action="admin-tab" data-id="looks">♡ Dressing</button>
     <button class="admin-link" data-admin-tab="portfolio" data-action="admin-tab" data-id="portfolio">▣ Lookbook</button>
-    <button class="admin-link" data-admin-tab="capsules" data-action="admin-tab" data-id="capsules">✦ Collections & mois</button>
     <button class="admin-link" data-admin-tab="orders" data-action="admin-tab" data-id="orders">▤ Commandes</button>
     <button class="admin-link" data-admin-tab="presentation" data-action="admin-tab" data-id="presentation">✎ Présentation</button>
     <button class="admin-link" data-admin-tab="settings" data-action="admin-tab" data-id="settings">⚙ Réglages</button>
