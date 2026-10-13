@@ -12,9 +12,9 @@ drawAdmin=function(){
  if(adminTab==='overview'){
   main.innerHTML=studioAdminHeader('Bonsoir, Kiana ♡','Ton espace créatif pour préparer les collections et mettre le studio en valeur.')+
   '<div class="dashboard-stats"><div class="metric"><strong>'+db.looks.length+'</strong><small>Tenues</small></div><div class="metric"><strong>'+db.looks.filter(p=>p.visible!==false).length+'</strong><small>Looks visibles</small></div><div class="metric"><strong>'+db.photos.length+'</strong><small>Photos portfolio</small></div></div>'+
-  '<div class="admin-feature"><span class="eyebrow">LET’S MAKE IT ICONIC</span><h4>Crée ton prochain best-seller RP.</h4><p>Choisis tes photos, tes compositions et les tenues à afficher dans la boutique.</p><button class="btn hot" onclick="studioNewLook()">+ AJOUTER UNE TENUE</button></div>'+
-  '<h4>Accès rapide</h4><div class="admin-quick"><button class="quick-card" onclick="studioSetTab(\'looks\')"><span>✦</span><strong>Mes collections ↗</strong><small>Gérer les articles, prix et visuels</small></button><button class="quick-card" onclick="studioSetTab(\'photos\')"><span>♡</span><strong>Galerie RP ↗</strong><small>Mettre à jour les photos Polaroid</small></button><button class="quick-card" onclick="studioSetTab(\'text\')"><span>✎</span><strong>Mon histoire ↗</strong><small>Personnaliser la présentation</small></button><button class="quick-card" onclick="navigate(\'shop\')"><span>↗</span><strong>Prévisualiser ↗</strong><small>Voir le résultat sur cet appareil</small></button></div>'+
-  '<div class="demo-notice" style="margin-top:23px"><b>À savoir :</b> les modifications sont enregistrées sur cet appareil seulement. Pour les partager avec tous tes clients RP, il faudra connecter ta base de données.</div>';return
+  '<div class="admin-feature"><span class="eyebrow">LET’S MAKE IT ICONIC</span><h4>Crée ton prochain best-seller .</h4><p>Choisis tes photos, tes compositions et les tenues à afficher dans la boutique.</p><button class="btn hot" onclick="studioNewLook()">+ AJOUTER UNE TENUE</button></div>'+
+  '<h4>Accès rapide</h4><div class="admin-quick"><button class="quick-card" onclick="studioSetTab(\'looks\')"><span>✦</span><strong>Mes collections ↗</strong><small>Gérer les articles, prix et visuels</small></button><button class="quick-card" onclick="studioSetTab(\'photos\')"><span>♡</span><strong>Galerie ↗</strong><small>Mettre à jour les photos Polaroid</small></button><button class="quick-card" onclick="studioSetTab(\'text\')"><span>✎</span><strong>Mon histoire ↗</strong><small>Personnaliser la présentation</small></button><button class="quick-card" onclick="navigate(\'shop\')"><span>↗</span><strong>Prévisualiser ↗</strong><small>Voir le résultat sur cet appareil</small></button></div>'+
+  '<div class="demo-notice" style="margin-top:23px"><b>À savoir :</b> les modifications sont enregistrées sur cet appareil seulement. Pour les partager avec tous tes clients , il faudra connecter ta base de données.</div>';return
  }
  if(adminTab==='looks'){studioDrawLooks();return}
  if(adminTab==='photos'){studioDrawPhotos();return}
@@ -28,7 +28,7 @@ function studioDrawLooks(){
  h+='<div class="manage-grid"><div class="collection-list">'+db.looks.map(x=>'<button class="manage-item '+(x.id===studioSelectedLook?'active':'')+'" onclick="studioSelectedLook='+Number(x.id)+';drawAdmin()">'+studioThumb(x)+'<span><strong>'+esc(x.name)+'</strong><small>'+esc(x.category)+' · '+(x.visible===false?'Brouillon':'Visible')+'</small></span></button>').join('')+'</div>';
  if(!p){document.getElementById('adminPanel').innerHTML=h+'<div class="editor-card">Ajoute ton premier look ♡</div></div>';return}
  h+='<div class="editor-card"><div class="editor-photo" id="studioLookPreview">'+(img(p.image)?'<img src="'+esc(img(p.image))+'" alt="Aperçu look">':'<span>KIANA ♡</span>')+'</div>'+
- '<div class="twocol"><div><label for="stName">Nom du look</label><input class="field" id="stName" maxlength="80" value="'+esc(p.name)+'"></div><div><label for="stPrice">Prix ($ RP)</label><input class="field" id="stPrice" type="number" min="0" max="9999999" value="'+Number(p.price||0)+'"></div></div>'+
+ '<div class="twocol"><div><label for="stName">Nom du look</label><input class="field" id="stName" maxlength="80" value="'+esc(p.name)+'"></div><div><label for="stPrice">Prix ($ )</label><input class="field" id="stPrice" type="number" min="0" max="9999999" value="'+Number(p.price||0)+'"></div></div>'+
  '<label for="stCategory">Collection</label><select id="stCategory">'+['Baddie','Glam','Y2K','Soft'].map(c=>'<option '+(p.category===c?'selected':'')+'>'+c+'</option>').join('')+'</select>'+
  '<label for="stDesc">Description</label><textarea rows="3" maxlength="1500" id="stDesc">'+esc(p.desc)+'</textarea>'+
  '<label for="stParts">Composition du look</label><textarea rows="3" maxlength="1500" id="stParts">'+esc(p.parts)+'</textarea>'+
@@ -60,7 +60,7 @@ function studioDrawPhotos(){
  document.getElementById('adminPanel').innerHTML=h
 }
 function studioNewPhoto(){db.photos.push({title:'Nouveau Polaroid',image:''});studioSelectedPhoto=db.photos.length-1;adminTab='photos';save();drawAdmin()}
-function studioSavePhoto(){let p=db.photos[studioSelectedPhoto];if(!p)return;p.title=document.getElementById('stPhotoTitle').value.trim()||'Photo RP';p.image=document.getElementById('stPhotoUrl').value;if(save()){drawAdmin();studioToast('Photo mise à jour ♡')}}
+function studioSavePhoto(){let p=db.photos[studioSelectedPhoto];if(!p)return;p.title=document.getElementById('stPhotoTitle').value.trim()||'Photo ';p.image=document.getElementById('stPhotoUrl').value;if(save()){drawAdmin();studioToast('Photo mise à jour ♡')}}
 function studioDeletePhoto(){if(!confirm('Supprimer cette photo de la démo ?'))return;db.photos.splice(studioSelectedPhoto,1);studioSelectedPhoto=Math.max(0,studioSelectedPhoto-1);save();drawAdmin()}
 function studioDrawTexts(){
  document.getElementById('adminPanel').innerHTML=studioAdminHeader('Ton histoire','Écris tes textes et regarde le résultat en direct.')+
