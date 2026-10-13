@@ -36,7 +36,7 @@ drawShop=function(){
  let entries=db.looks.filter(x=>x.visible!==false&&(category==='Tout'||(category==='Favoris ♡'?studioFavs.has(x.id):x.category===category))&&[x.name,x.desc,x.parts].join(' ').toLowerCase().includes(q));
  if(studioSort==='priceAsc')entries.sort((a,b)=>a.price-b.price);
  if(studioSort==='priceDesc')entries.sort((a,b)=>b.price-a.price);
- if(studioSort==='featured')entries.sort((a,b)=>Number(!!b.featured)-Number(!!a.featured));
+ if(studioSort==='featured')entries.sort((a,b)=>Number(!!b.likedByFounder)-Number(!!a.likedByFounder));
  document.getElementById('shopProducts').innerHTML=entries.length?entries.map(lookCard).join(''):'<p>Aucune tenue correspondant à ta recherche ♡</p>';
  const counter=document.getElementById('studioProductCount');if(counter)counter.textContent=entries.length+' look(s) disponibles';
 };
@@ -51,5 +51,5 @@ function studioScroll(){let d=document.documentElement,full=d.scrollHeight-inner
 addEventListener('scroll',studioScroll,{passive:true});studioScroll();
 let glow=document.createElement('div');glow.className='ambient-glow';document.body.appendChild(glow);
 if(matchMedia('(pointer:fine)').matches)addEventListener('pointermove',e=>{document.documentElement.style.setProperty('--mouseX',e.clientX+'px');document.documentElement.style.setProperty('--mouseY',e.clientY+'px')},{passive:true});
-let sort=document.createElement('div');sort.className='sortbar';sort.innerHTML='<p id="studioProductCount">Collections Kiana</p><select id="studioSort" aria-label="Trier les looks"><option value="featured">Choix de Kiana</option><option value="priceAsc">Prix croissant</option><option value="priceDesc">Prix décroissant</option></select>';document.getElementById('shopProducts').insertAdjacentElement('beforebegin',sort);sort.querySelector('select').onchange=e=>{studioSort=e.target.value;drawShop()};drawAll();
+let sort=document.createElement('div');sort.className='sortbar';sort.innerHTML='<p id="studioProductCount">Collections Kiana</p><select id="studioSort" aria-label="Trier les looks"><option value="featured">Coups de cœur</option><option value="priceAsc">Prix croissant</option><option value="priceDesc">Prix décroissant</option></select>';document.getElementById('shopProducts').insertAdjacentElement('beforebegin',sort);sort.querySelector('select').onchange=e=>{studioSort=e.target.value;drawShop()};drawAll();
 if(document.getElementById('founder').classList.contains('active')){navigate('home');studioGate()}
