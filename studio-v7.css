@@ -79,3 +79,12 @@
 @media(max-width:730px){.v7-look-editor{grid-template-columns:1fr}.v7-editor-photo{min-height:260px}.v7-color-palette{grid-template-columns:repeat(6,minmax(0,1fr))}.v7-gallery{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}.v7-month-editor{grid-template-columns:1fr}}
 @media(max-width:450px){.v7-color-palette{grid-template-columns:repeat(5,minmax(0,1fr))}.v7-look-photo{height:176px}.v7-kinetic{font-size:1.35rem;letter-spacing:.11em}.v7-gallery-controls .field{max-width:100%;width:100%}}
 @media(prefers-reduced-motion:reduce){.v7-kinetic,.v7-kinetic em,.v7-like.active{animation:none!important}}
+
+/* Unified founder color system: no sudden white inputs */
+.studio-admin .field,.studio-admin input:not([type=checkbox]):not([type=radio]),.studio-admin textarea,.studio-admin select{
+ background:#472149;color:#fff0f9;border:1px solid #b57da2;border-radius:10px;
+}
+.studio-admin input::placeholder,.studio-admin textarea::placeholder{color:#ca9fbc}
+.studio-admin select option{background:#43204a;color:#fff3fb}
+.studio-admin .v7-look[hidden]{display:none!important}
+#overlay .v7-editor-form input[type=file]::file-selector-button{border:1px solid #f3b4d3;border-radius:8px;padding:8px 12px;margin-right:10px;background:#efa5d0;color:#311430;font-weight:800;cursor:pointer}
