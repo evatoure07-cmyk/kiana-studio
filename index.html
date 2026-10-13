@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#2b1232">
 <meta name="description" content="KIANA STUDIO — boutique de tenues, créations sur mesure, collections et rendez-vous.">
 <title>KIANA STUDIO · Your Look, Your Rules</title>
-<link rel="stylesheet" href="kiana-v8.css?v=8"><link rel="stylesheet" href="kiana-v9.css?v=10">
-<script src="kiana-v8-core.js?v=10" defer></script>
-<script src="kiana-v8-admin.js?v=10" defer></script>
+<link rel="stylesheet" href="kiana-v8.css?v=8"><link rel="stylesheet" href="kiana-v9.css?v=10"><link rel="stylesheet" href="kiana-v10.css?v=10"">
+<script src="kiana-v8-core.js?v=11" defer></script>
+<script src="kiana-v8-admin.js?v=11" defer></script>
 </head>
 <body>
 <header class="topbar" id="topbar">
@@ -109,6 +109,7 @@
 <h3 class="serif" style="font-size:1.9rem">Ma commande</h3><div id="cart-totals"></div>
 <form id="cart-checkout-form"><label class="field-label" for="cart-name">Nom et prénom *</label><input id="cart-name" class="field" maxlength="70" required placeholder="Prénom Nom">
 <label class="field-label" for="cart-phone">Numéro de téléphone *</label><input id="cart-phone" type="tel" inputmode="tel" class="field" maxlength="24" required placeholder="555-0123">
+<label class="field-label" for="cart-date">Date de livraison souhaitée *</label><input class="field" id="cart-date" type="date" required><p class="help">Livraison demandée dans 3 jours ou moins : <strong>supplément express de 500 $</strong> par commande.</p><p id="cart-urgent" class="deadline-info" aria-live="polite"></p>
 <label class="field-label" for="cart-note">Précisions (facultatif)</label><textarea class="field" id="cart-note" rows="3" maxlength="1200" placeholder="Informations utiles pour Kiana..."></textarea>
 <button class="btn btn-primary btn-block" type="submit" id="cart-checkout-button" style="margin-top:17px">VALIDER LES TENUES ↗</button></form>
 <p class="help" style="margin-top:16px">Tu obtiendras un reçu COMMANDE-01, COMMANDE-02… à transmettre à Kiana. Cette démo n'envoie pas encore de commandes automatiquement.</p></aside></div>
@@ -143,7 +144,19 @@
      <textarea class="field" id="order-avoid" maxlength="1800" rows="4" placeholder="Pas de jupe, pas de talons, pas de masque..."></textarea>
     </div>
     <div class="order-section">
-     <span class="numberline">ÉTAPE 05 / TES INFORMATIONS</span><h3>Pour préparer ta commande.</h3>
+      <span class="numberline">ÉTAPE 05 / BUDGET ET LIVRAISON</span><h3>Ton budget et ta date ♡</h3>
+      <label class="field-label" for="order-budget">Budget maximum pour ta création *</label>
+      <select class="field" id="order-budget" required>
+       <option value="">Choisir un budget</option><option value="500">500 $</option><option value="1000">1 000 $</option><option value="2000">2 000 $</option><option value="3000">3 000 $</option><option value="5000">5 000 $</option><option value="other">Autre montant…</option>
+      </select>
+      <div id="order-budget-custom-wrap" hidden><label class="field-label" for="order-budget-custom">Ton budget personnalisé *</label><input class="field" id="order-budget-custom" type="number" min="1" max="9999999" placeholder="Montant en $"></div>
+      <label class="field-label" for="order-date">Date de livraison souhaitée *</label>
+      <input class="field" id="order-date" type="date" required>
+      <p class="help">Une date dans <b>3 jours ou moins</b> entraîne un <strong>supplément express de 500 $</strong>. Le budget est une indication, le prix de création reste sur devis.</p>
+      <div class="deadline-info" id="order-deadline-feedback" aria-live="polite"></div>
+     </div>
+    <div class="order-section">
+     <span class="numberline">ÉTAPE 06 / TES INFORMATIONS</span><h3>Pour préparer ta commande.</h3>
      <div class="inline-fields">
       <div><label class="field-label" for="order-name">Nom et prénom *</label><input class="field" id="order-name" required maxlength="70" placeholder="Prénom Nom"></div>
       <div><label class="field-label" for="order-phone">Numéro de téléphone *</label><input class="field" id="order-phone" required type="tel" maxlength="24" placeholder="555-0123" inputmode="tel"></div>
@@ -156,6 +169,7 @@
    <aside class="panel order-aside">
     <span class="eyebrow">CRÉATION À DISTANCE</span><h3 id="order-summary-name">Création sur mesure</h3>
     <p id="order-summary-info"></p><strong class="price" id="order-summary-price">Tarif à définir</strong>
+    <div class="estimate-lines" id="order-price-breakdown"></div>
     <div class="notice" style="margin-top:25px">Après validation : un reçu <strong>COMMANDE-01</strong>, puis un suivi avec numéro de téléphone et de commande.</div>
     <p class="help" style="margin-top:18px">Le site fonctionne encore en démonstration locale : les commandes ne parviennent pas automatiquement à la fondatrice.</p>
    </aside>
@@ -220,6 +234,7 @@
     <button class="admin-link" data-admin-tab="looks" data-action="admin-tab" data-id="looks">♡ Dressing</button>
     <button class="admin-link" data-admin-tab="portfolio" data-action="admin-tab" data-id="portfolio">▣ Lookbook</button>
     <button class="admin-link" data-admin-tab="orders" data-action="admin-tab" data-id="orders">▤ Commandes</button>
+    <button class="admin-link" data-admin-tab="notifications" data-action="admin-tab" data-id="notifications">✧ Notifications <span id="admin-notif-count" class="notif-count" hidden>0</span></button>
     <button class="admin-link" data-admin-tab="presentation" data-action="admin-tab" data-id="presentation">✎ Présentation</button>
     <button class="admin-link" data-admin-tab="settings" data-action="admin-tab" data-id="settings">⚙ Réglages</button>
    </div></aside>
