@@ -4,7 +4,7 @@
    All order/admin data is browser-local pending a secure Supabase backend. */
 const STORE='kiana-demo-new-build';
 const PIN_KEY='kiana-founder-demo-code-v1';
-const FAV_KEY='kiana-v8-customer-favorites';
+const CART_KEY='kiana-v9-cart';
 const FALLBACK_IMG=[
  'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1000&auto=format&fit=crop',
  'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=1000&auto=format&fit=crop',
@@ -65,14 +65,14 @@ function initialState(){
  return db
 }
 let db=initialState(),founderUnlocked=false,adminTab='overview',selectedProduct=null,source='custom',mode='free',colorSelected=null,colorConfirmed=null,lastReceipt=null,chosenFilter='all',chosenSort='featured',chosenCapsule='all',adminFilter='all',adminSearch='',editorImage=null,editorId=null,bookingMessage='',loginAttempts=0;
-let customerFavs=new Set(Array.isArray(readStorage(FAV_KEY))?readStorage(FAV_KEY):[]);
+let cart=Array.isArray(readStorage(CART_KEY))?readStorage(CART_KEY).filter(x=>x&&x.id!=null).map(x=>({id:String(x.id),qty:Math.min(99,Math.max(1,Number(x.qty)||1))})):[];
 function save(){
  try{localStorage.setItem(STORE,JSON.stringify(db));return true}
  catch{toast('Stockage saturé : fais une sauvegarde JSON ou réduis les photos.');return false}
 }
 function toast(s){let t=byId('toast');t.textContent=s;t.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove('show'),3200)}
 function nav(page){
- const allowed=['home','shop','portfolio','commission','tracking','booking','about','receipt','founder'];
+ const allowed=['home','shop','cart','portfolio','commission','tracking','booking','about','receipt','founder'];
  if(!allowed.includes(page))page='home';
  if(page==='founder'&&!founderUnlocked){openGate();return}
  if(location.hash!=='#'+page){location.hash=page}else showRoute()
@@ -86,90 +86,121 @@ function showRoute(){
  byId('mobile-nav').classList.remove('open');byId('menu-toggle').setAttribute('aria-expanded','false');
  if(page==='home')renderHome();
  if(page==='shop')renderShop();
+ if(page==='cart')renderCart();
  if(page==='portfolio')renderPortfolio();
  if(page==='commission')renderCommission();
  if(page==='receipt')renderReceipt();
  if(page==='about')renderAbout();
  if(page==='founder')renderAdmin();
+ updateCartCount();
  window.scrollTo({top:0,behavior:'auto'});
- document.title=(page==='home'?'KIANA STUDIO':({shop:'La boutique',portfolio:'Lookbook',commission:'Créer ma tenue',tracking:'Suivi de commande',booking:'Rendez-vous',about:'À propos',receipt:'Mon reçu',founder:'Backstage'}[page]||'KIANA STUDIO')+' | KIANA STUDIO');
+ document.title=(page==='home'?'KIANA STUDIO':({shop:'La boutique',cart:'Mon panier',portfolio:'Lookbook',commission:'Créer ma tenue',tracking:'Suivi de commande',booking:'Rendez-vous',about:'À propos',receipt:'Mon reçu',founder:'Backstage'}[page]||'KIANA STUDIO')+' | KIANA STUDIO');
 }
 function capsuleFor(p){return db.capsules.find(c=>String(c.id)===String(p.capsuleId))}
 function renderHome(){
  byId('hero-intro').textContent=db.intro;
  byId('hero-image').innerHTML=safeImg(db.heroImage,'Ambiance mode KIANA');
- const shown=db.capsules.filter(c=>c.visible!==false);
- byId('home-capsules').innerHTML=shown.map(c=>'<button class="capsule" data-action="view-capsule" data-id="'+escapeHtml(c.id)+'">'+safeImg(c.image,c.name)+'<div><span class="eyebrow">CAPSULE COLLECTION</span><h3>'+escapeHtml(c.name)+'</h3><p>'+escapeHtml(c.description)+'</p><span class="capsule-link">DÉCOUVRIR ↗</span></div></button>').join('')||'<p class="muted">De nouvelles collections arrivent bientôt ♡</p>';
- const p=db.looks.find(p=>String(p.id)===String(db.monthLookId)&&p.visible!==false);
- const feature=byId('monthly-feature');
- if(db.monthEnabled===false||!p){feature.hidden=true}
- else{
-  feature.hidden=false;
-  byId('home-month').innerHTML='<div class="month-art">'+safeImg(p.image,p.name)+'<b>✦ LOOK DU MOIS</b></div><div class="month-copy"><span class="eyebrow">THE KIANA EDIT</span><h3>'+escapeHtml(db.monthTitle||p.name)+'</h3><p>'+escapeHtml(db.monthDescription||p.desc)+'</p><div class="price">'+price(p.price)+'</div><div style="margin-top:20px"><button class="btn btn-primary" data-action="order-look" data-id="'+escapeHtml(p.id)+'">PERSONNALISER CE LOOK ↗</button></div></div>'
- }
  const published=db.looks.filter(p=>p.visible!==false);
- const loved=published.filter(p=>p.likedByFounder);
- const picks=[...loved,...published.filter(p=>!p.likedByFounder)].slice(0,3);
- byId('home-looks').innerHTML=picks.map(lookCard).join('')||'<p class="muted">Des looks arrivent bientôt ♡</p>';
- byId('home-portfolio').innerHTML=polaroids(db.photos.slice(0,3),0)
+ byId('home-looks').innerHTML=published.slice(0,6).map(lookCard).join('')||'<p class="muted">De nouvelles tenues arrivent bientôt ♡</p>';
+ byId('home-portfolio').innerHTML=polaroids(db.photos.slice(0,3),0);
 }
 function polaroids(items,startIndex){return items.map((p,i)=>'<button class="polaroid" data-action="open-photo" data-id="'+(startIndex+i)+'"><div class="polaroid-photo">'+safeImg(p.image,p.title)+'</div><strong>'+escapeHtml(p.title)+'</strong><small>KIANA STUDIO · FASHION DIARY</small></button>').join('')||'<p class="muted">De nouvelles photos arrivent bientôt ♡</p>'}
 function renderPortfolio(){byId('portfolio-grid').innerHTML=polaroids(db.photos,0)}
 function lookCard(p){
- const fav=customerFavs.has(String(p.id));
- return '<article class="look-card"><div class="look-photo">'+safeImg(p.image,p.name)+(p.likedByFounder?'<span class="pill">♡ COUP DE CŒUR</span>':'')+
- '<button class="admin-heart" style="top:12px;right:12px" data-action="customer-fav" data-id="'+escapeHtml(p.id)+'" aria-label="'+(fav?'Retirer des favoris':'Ajouter aux favoris')+'">'+(fav?'♥':'♡')+'</button></div>'+
- '<div class="look-info"><small>'+escapeHtml(capsuleFor(p)?.name||p.category||'Collection')+'</small><h3>'+escapeHtml(p.name)+'</h3><p>'+escapeHtml(p.desc)+'</p>'+
- '<div class="look-foot"><strong class="price">'+price(p.price)+'</strong><button class="btn btn-primary btn-small" data-action="detail-look" data-id="'+escapeHtml(p.id)+'">VOIR LE LOOK ↗</button></div></div></article>'
+ return '<article class="look-card"><button class="look-photo look-photo-button" data-action="detail-look" data-id="'+escapeHtml(p.id)+'" aria-label="Voir '+escapeHtml(p.name)+'">'+safeImg(p.image,p.name)+'</button>'+
+ '<div class="look-info"><small>KIANA STUDIO · FASHION</small><h3>'+escapeHtml(p.name)+'</h3><p>'+escapeHtml(p.desc)+'</p>'+
+ '<div class="look-foot"><strong class="price">'+price(p.price)+'</strong><div class="look-buttons"><button class="btn btn-small" data-action="detail-look" data-id="'+escapeHtml(p.id)+'">DÉTAILS</button><button class="btn btn-primary btn-small" data-action="cart-add" data-id="'+escapeHtml(p.id)+'">+ PANIER</button></div></div></div></article>';
 }
 function renderShop(){
- const filterList=[['all','Toutes'],...db.capsules.filter(c=>c.visible!==false).map(c=>[String(c.id),c.name]),['favorites','Mes favoris']];
- byId('shop-filters').innerHTML=filterList.map(([id,label])=>'<button class="chip '+(chosenFilter===id?'selected':'')+'" data-action="shop-filter" data-id="'+escapeHtml(id)+'">'+escapeHtml(label)+'</button>').join('');
- let looks=db.looks.filter(p=>p.visible!==false);
- if(chosenFilter==='favorites')looks=looks.filter(p=>customerFavs.has(String(p.id)));
- else if(chosenFilter!=='all')looks=looks.filter(p=>String(p.capsuleId)===chosenFilter);
  const q=byId('shop-search').value.trim().toLowerCase();
- if(q)looks=looks.filter(p=>(p.name+' '+p.desc+' '+(capsuleFor(p)?.name||'')).toLowerCase().includes(q));
+ let looks=db.looks.filter(p=>p.visible!==false&&(!q||(p.name+' '+p.desc).toLowerCase().includes(q)));
  if(chosenSort==='price-low')looks.sort((a,b)=>a.price-b.price);
  else if(chosenSort==='price-high')looks.sort((a,b)=>b.price-a.price);
- else looks.sort((a,b)=>Number(!!b.likedByFounder)-Number(!!a.likedByFounder));
  byId('shop-result-count').textContent=looks.length+' tenue'+(looks.length>1?'s':'');
- byId('shop-looks').innerHTML=looks.map(lookCard).join('')||'<div class="panel" style="grid-column:1/-1;text-align:center">Aucune tenue pour ces filtres. ♡</div>';
+ byId('shop-looks').innerHTML=looks.map(lookCard).join('')||'<div class="panel" style="grid-column:1/-1;text-align:center">Aucune tenue trouvée ♡</div>';
+ updateCartCount()
 }
 function openLook(id){
  const p=db.looks.find(p=>String(p.id)===String(id)&&p.visible!==false);if(!p)return;
- openModal('<div class="detail-grid"><div class="detail-photo">'+safeImg(p.image,p.name)+'</div><div class="detail-info"><span class="eyebrow">'+escapeHtml(capsuleFor(p)?.name||p.category)+'</span><h2>'+escapeHtml(p.name)+'</h2><p>'+escapeHtml(p.desc)+'</p><p class="price">'+price(p.price)+'</p><div class="notice" style="margin:25px 0">Personnalise la couleur, les accessoires et les détails de cette tenue dans l’atelier.</div><button class="btn btn-primary btn-block" data-action="order-look" data-id="'+escapeHtml(p.id)+'">COMMANDER CE LOOK ↗</button></div></div>')
+ const inCart=cart.find(x=>x.id===String(id))?.qty||0;
+ openModal('<div class="detail-grid"><div class="detail-photo">'+safeImg(p.image,p.name)+'</div><div class="detail-info"><span class="eyebrow">KIANA STUDIO · BOUTIQUE</span><h2>'+escapeHtml(p.name)+'</h2><p>'+escapeHtml(p.desc)+'</p>'+
+ '<p class="price">'+price(p.price)+'</p><p class="help">Tu peux ajouter plusieurs tenues et choisir les quantités dans ton panier.</p>'+
+ '<button class="btn btn-primary btn-block" data-action="cart-add" data-id="'+escapeHtml(p.id)+'">+ AJOUTER AU PANIER</button>'+
+ (inCart?'<p class="help">'+inCart+' déjà dans le panier</p>':'')+
+ '<button class="btn btn-outline btn-block" style="margin-top:10px" data-action="go-cart">VOIR MON PANIER ↗</button></div></div>');
 }
-function openOrder(id){
- const p=db.looks.find(x=>String(x.id)===String(id)&&x.visible!==false);
- selectedProduct=p?String(p.id):null;source=p?'catalog':'custom';
+function openOrder(){
  colorSelected=null;colorConfirmed=null;mode='free';
  closeModal();nav('commission')
 }
+function updateCartCount(){
+ const n=cart.reduce((sum,x)=>sum+x.qty,0);
+ if(byId('nav-cart-count'))byId('nav-cart-count').textContent=n;
+ if(byId('mobile-cart-count'))byId('mobile-cart-count').textContent=n;
+}
+function persistCart(){
+ try{localStorage.setItem(CART_KEY,JSON.stringify(cart));updateCartCount();return true}
+ catch{toast('Impossible de sauvegarder ce panier.');return false}
+}
+function cartProduct(id){return db.looks.find(x=>String(x.id)===String(id)&&x.visible!==false)}
+function cartAdd(id){
+ const p=cartProduct(id);if(!p){toast('Cette tenue n’est plus disponible.');return}
+ const existing=cart.find(x=>x.id===String(id));
+ if(existing){if(existing.qty>=99){toast('Limite de 99 articles par tenue.');return}existing.qty++}
+ else cart.push({id:String(id),qty:1});
+ persistCart();renderCart();toast(p.name+' ajouté au panier ♡')
+}
+function cartAdjust(id,delta){
+ const entry=cart.find(x=>x.id===String(id));if(!entry)return;
+ if(delta===0){cart=cart.filter(x=>x!==entry)}
+ else entry.qty=Math.min(99,entry.qty+delta);
+ if(entry.qty<=0)cart=cart.filter(x=>x!==entry);
+ persistCart();renderCart()
+}
+function renderCart(){
+ const items=cart.map(entry=>({entry,p:cartProduct(entry.id)})).filter(x=>x.p);
+ const total=items.reduce((sum,x)=>sum+x.p.price*x.entry.qty,0);
+ const n=items.reduce((sum,x)=>sum+x.entry.qty,0);
+ byId('cart-items').innerHTML=items.length?items.map(({entry,p})=>
+ '<article class="cart-row"><div class="cart-thumbnail">'+safeImg(p.image,p.name)+'</div><div class="cart-row-info"><strong>'+escapeHtml(p.name)+'</strong><p class="muted">'+price(p.price)+' / tenue</p><button class="cart-remove" data-action="cart-remove" data-id="'+escapeHtml(p.id)+'">Retirer</button></div>'+
+ '<div class="cart-qty"><button aria-label="Diminuer" data-action="cart-dec" data-id="'+escapeHtml(p.id)+'">−</button><span>'+entry.qty+'</span><button aria-label="Augmenter" data-action="cart-inc" data-id="'+escapeHtml(p.id)+'">+</button></div>'+
+ '<strong class="price">'+price(p.price*entry.qty)+'</strong></article>').join(''):
+ '<div class="panel cart-empty"><h3 class="serif" style="font-size:2.2rem">Ton panier est vide ♡</h3><p class="muted">Ajoute une ou plusieurs tenues depuis la boutique.</p><a href="#shop" class="btn btn-primary">VOIR LES TENUES ↗</a></div>';
+ byId('cart-totals').innerHTML='<div class="cart-total-line"><span>'+n+' tenue'+(n>1?'s':'')+'</span><strong>'+price(total)+'</strong></div>'+
+ '<div class="cart-total-line"><span>Total à régler dans le jeu</span><strong class="price">'+price(total)+'</strong></div>';
+ byId('cart-checkout-form').hidden=items.length===0;
+ updateCartCount()
+}
+function submitCart(){
+ const active=cart.map(entry=>({entry,p:cartProduct(entry.id)})).filter(x=>x.p);
+ if(!active.length){toast('Ajoute une tenue à ton panier.');return}
+ const name=byId('cart-name').value.trim(),phone=byId('cart-phone').value.trim();
+ if(name.length<2){toast('Indique ton nom.');return}
+ if(!validPhone(phone)){toast('Indique un numéro de téléphone valide.');return}
+ const items=active.map(({entry,p})=>({id:String(p.id),name:p.name,price:p.price,qty:entry.qty,image:p.image}));
+ const total=items.reduce((sum,item)=>sum+item.price*item.qty,0);
+ const [seq,id]=nextOrderId();
+ const order={id,kind:'boutique',createdAt:new Date().toISOString(),status:'En préparation',
+ name,phone,service:'Commande boutique',lookName:items.length+' tenue'+(items.length>1?'s':''),
+ items,price:total,total,mode:'Catalogue',color:'—',options:{},wants:byId('cart-note').value.trim(),avoid:''};
+ if(!storeOrder(order,seq))return;
+ cart=[];persistCart();byId('cart-checkout-form').reset();nav('receipt');
+ toast('Commande '+id+' créée ♡')
+}
+
 function renderCommission(){
- const published=db.looks.filter(p=>p.visible!==false);
- byId('source-select').innerHTML=published.map(p=>'<option value="'+escapeHtml(p.id)+'" '+(String(p.id)===String(selectedProduct)?'selected':'')+'>'+escapeHtml(p.name)+' — '+price(p.price)+'</option>').join('');
- if(!selectedProduct&&published.length)selectedProduct=String(published[0].id);
- byId('source-catalog').classList.toggle('active',source==='catalog');
- byId('source-custom').classList.toggle('active',source==='custom');
- byId('look-select-wrap').hidden=source!=='catalog';
  byId('mode-free').classList.toggle('active',mode==='free');
  byId('mode-custom').classList.toggle('active',mode==='custom');
  byId('accessory-area').hidden=mode!=='custom';
- byId('accessory-area').innerHTML=ACCESSORIES.map(([id,label])=>'<div class="acc"><span>'+label+'</span><div class="yesno"><label><input type="radio" name="acc-'+id+'" value="Oui"><span>Oui</span></label><label><input type="radio" name="acc-'+id+'" value="Non" checked><span>Non</span></label></div></div>').join('');
+ byId('accessory-area').innerHTML=ACCESSORIES.map(([id,label])=>
+ '<div class="acc"><span>'+label+'</span><div class="yesno"><label><input type="radio" name="acc-'+id+'" value="Oui"><span>Oui</span></label><label><input type="radio" name="acc-'+id+'" value="Non" checked><span>Non</span></label></div></div>').join('');
  byId('color-options').innerHTML=COLOR_LIST.map(([name,hex],i)=>'<button type="button" class="color-swatch '+(colorSelected===i?'selected':'')+'" style="background:'+hex+'" data-action="color" data-id="'+i+'" aria-label="'+name+'" title="'+name+'" aria-pressed="'+(colorSelected===i)+'"></button>').join('');
  renderColorStatus();
  byId('order-service').innerHTML=SERVICES.map(s=>'<option>'+escapeHtml(s)+'</option>').join('');
- byId('order-other-wrap').hidden=true;
- byId('order-other').required=false;
- byId('order-source-summary').textContent=source==='catalog'?'Un look déjà créé, à personnaliser selon tes envies.':'Une tenue imaginée spécialement pour toi.';
- renderCommissionPrice()
-}
-function renderCommissionPrice(){
- const p=source==='catalog'?db.looks.find(x=>String(x.id)===String(selectedProduct)):null;
- byId('order-summary-name').textContent=p?.name||'Création sur mesure';
- byId('order-summary-price').textContent=p?price(p.price):'Tarif à définir';
- byId('order-summary-info').textContent=p?'Look de départ : '+p.name+'. Tu peux personnaliser sa couleur, ses pièces et tes demandes.':'Kiana créera une tenue selon tes indications. Le tarif sera convenu lors de l’échange.';
+ byId('order-other-wrap').hidden=true;byId('order-other').required=false;
+ byId('order-summary-name').textContent='Création sur mesure';
+ byId('order-summary-price').textContent='Tarif à définir';
+ byId('order-summary-info').textContent='Envoie tes préférences et ta couleur : Kiana prépare ta tenue à distance, sans rendez-vous.';
 }
 function renderColorStatus(){
  document.querySelectorAll('.color-swatch').forEach(b=>{
@@ -184,71 +215,84 @@ function renderColorStatus(){
  byId('confirm-color').textContent=verified?'✓ COULEUR VALIDÉE':'VALIDER LA COULEUR';
 }
 function phoneDigits(v){return String(v||'').replace(/\D/g,'')}
+function validPhone(v){return /^\+?[\d\s().-]+$/.test(v)&&phoneDigits(v).length>=5&&phoneDigits(v).length<=18}
 function nextOrderId(){
  const maxExisting=Math.max(0,...db.orders.map(o=>Number((/^COMMANDE-(\d+)$/i.exec(String(o.id))||[])[1])||0));
  const n=Math.max(maxExisting,Number(db.orderSequence)||0)+1;
  return [n,'COMMANDE-'+String(n).padStart(2,'0')]
 }
+function storeOrder(order,seq){
+ db.orders.unshift(order);const previous=db.orderSequence;db.orderSequence=seq;
+ if(!save()){db.orders.shift();db.orderSequence=previous;return false}
+ lastReceipt=order;return true
+}
 function submitOrder(){
- const name=byId('order-name').value.trim(),phone=byId('order-phone').value.trim();
- const service=byId('order-service').value;
+ const name=byId('order-name').value.trim(),phone=byId('order-phone').value.trim(),service=byId('order-service').value;
  if(name.length<2){toast('Indique ton nom.');byId('order-name').focus();return}
- if(!/^\+?[\d\s().-]+$/.test(phone)||phoneDigits(phone).length<5||phoneDigits(phone).length>18){toast('Indique un numéro de téléphone valide.');byId('order-phone').focus();return}
- if(colorConfirmed===null||colorSelected!==colorConfirmed){toast('Choisis et valide une couleur avant de commander.');byId('color-options').scrollIntoView({block:'center',behavior:'smooth'});return}
- if(service==='Autre (à préciser)'&&!byId('order-other').value.trim()){toast('Précise le service demandé.');byId('order-other').focus();return}
- const p=source==='catalog'?db.looks.find(x=>String(x.id)===String(selectedProduct)&&x.visible!==false):null;
- if(source==='catalog'&&!p){toast('Sélectionne une tenue disponible.');return}
- const options={};
- if(mode==='custom')ACCESSORIES.forEach(([id])=>{options[id]=document.querySelector('input[name="acc-'+id+'"]:checked')?.value||'Non'});
+ if(!validPhone(phone)){toast('Indique un numéro de téléphone valide.');byId('order-phone').focus();return}
+ if(colorConfirmed===null||colorSelected!==colorConfirmed){toast('Choisis et valide une couleur.');byId('color-options').scrollIntoView({block:'center',behavior:'smooth'});return}
+ if(service==='Autre (à préciser)'&&!byId('order-other').value.trim()){toast('Précise le service demandé.');return}
+ const options={};if(mode==='custom')ACCESSORIES.forEach(([id])=>{options[id]=document.querySelector('input[name="acc-'+id+'"]:checked')?.value||'Non'});
  const [seq,id]=nextOrderId();
- const order={id,createdAt:new Date().toISOString(),status:'En préparation',name,phone,
+ const order={id,kind:'sur-mesure',createdAt:new Date().toISOString(),status:'En préparation',name,phone,
  service:service==='Autre (à préciser)'?'Autre : '+byId('order-other').value.trim():service,
- source:source==='catalog'?'Look du catalogue':'Création sur mesure',
- lookId:p?.id||null,lookName:p?.name||'Création originale',price:p?.price??null,
+ lookName:'Création sur mesure',items:[],price:null,total:null,
  mode:mode==='custom'?'Customisation':'Choix libre',color:COLOR_LIST[colorConfirmed][0],
  options,wants:byId('order-wants').value.trim(),avoid:byId('order-avoid').value.trim()};
- db.orders.unshift(order);db.orderSequence=seq;
- if(!save()){db.orders.shift();db.orderSequence=seq-1;return}
- lastReceipt=order;
+ if(!storeOrder(order,seq))return;
  colorSelected=null;colorConfirmed=null;
  ['order-name','order-phone','order-wants','order-avoid','order-other'].forEach(id=>{if(byId(id))byId(id).value=''});
- toast('Commande '+id+' créée sur cet appareil ♡');
- nav('receipt')
+ nav('receipt');toast('Demande '+id+' préparée ♡')
 }
 function orderOptionsText(o){
+ if(o.kind==='boutique'||o.mode==='Catalogue')return'Articles du catalogue, sans customisation';
  return o.mode==='Customisation'?ACCESSORIES.map(([id,label])=>label+' : '+(o.options?.[id]||'Non')).join(' · '):'Kiana choisit les détails'
 }
+function orderItems(o){
+ if(Array.isArray(o.items)&&o.items.length)return o.items;
+ return []
+}
+function orderAmount(o){
+ if(o.kind==='boutique')return Number(o.price??o.total??0);
+ return o.price??o.total??null
+}
 function orderSummaryText(o){
- return ['KIANA STUDIO · '+o.id,'Nom : '+o.name,'Téléphone : '+o.phone,'Service : '+o.service,'Base : '+o.lookName,
- 'Mode : '+o.mode,'Couleur : '+o.color,'Accessoires : '+orderOptionsText(o),
- 'Mes envies : '+(o.wants||'Non précisées'),'À éviter : '+(o.avoid||'Aucune précision'),
- 'Prix : '+price(o.price),'Statut : '+o.status,'À transmettre à Kiana pour valider la demande.'].join('\n')
+ const lines=['KIANA STUDIO · '+o.id,'Client : '+o.name,'Téléphone : '+o.phone,'Service : '+(o.service||'Commande'),
+ ...orderItems(o).map(x=>x.qty+' × '+x.name+' — '+price(Number(x.price)*Number(x.qty))),
+ ...(!orderItems(o).length?['Création : '+(o.lookName||'Sur mesure'),'Mode : '+o.mode,'Couleur : '+(o.color||'À définir'),'Options : '+orderOptionsText(o)]:[]),
+ ...(o.wants?['Précisions : '+o.wants]:[]),...(o.avoid?['À éviter : '+o.avoid]:[]),
+ 'Total : '+price(orderAmount(o)),'Statut : '+o.status,'À transmettre à Kiana pour confirmer la commande.'];
+ return lines.join('\n')
 }
 function renderReceipt(){
  const o=lastReceipt;
- if(!o){byId('receipt-area').innerHTML='<p class="panel">Aucun reçu en cours. Va dans la boutique pour commander une tenue.</p>';return}
+ if(!o){byId('receipt-area').innerHTML='<div class="panel">Aucun reçu en cours.</div>';return}
+ const items=orderItems(o);
+ const lines=items.length?items.map(x=>receiptRow(Number(x.qty)+' × '+x.name,price(Number(x.price)*Number(x.qty)))).join(''):
+ receiptRow('Création',o.lookName||'Sur mesure')+receiptRow('Formule',o.mode||'Choix libre')+receiptRow('Couleur',o.color||'À définir');
  byId('receipt-area').innerHTML='<div class="receipt-wrap"><div class="receipt"><h2>KIANA STUDIO ✦</h2><p>FASHION ORDER · MERCI ♡</p>'+
- receiptRow('Commande',o.id)+receiptRow('Nom',o.name)+receiptRow('Téléphone',o.phone)+receiptRow('Service',o.service)+receiptRow('Tenue',o.lookName)+
- receiptRow('Mode',o.mode)+receiptRow('Couleur',o.color)+receiptRow('Total',price(o.price))+
- '<div class="receipt-notes"><b>Personnalisation :</b> '+escapeHtml(orderOptionsText(o))+
- '<hr style="border:0;border-top:1px dashed #b98bab;margin:12px 0"><b>Demandes :</b> '+escapeHtml(o.wants||'Aucune précision')+
- '<hr style="border:0;border-top:1px dashed #b98bab;margin:12px 0"><b>À éviter :</b> '+escapeHtml(o.avoid||'Aucune précision')+'</div>'+
+ receiptRow('Commande',o.id)+receiptRow('Nom',o.name)+receiptRow('Téléphone',o.phone)+receiptRow('Service',o.service||'Commande boutique')+
+ lines+receiptRow('TOTAL',price(orderAmount(o)))+
+ '<div class="receipt-notes"><b>'+ (items.length?'Tes articles':'Personnalisation')+':</b> '+escapeHtml(items.length?items.map(x=>x.qty+' × '+x.name).join(', '):orderOptionsText(o))+
+ (o.wants?'<hr style="border:0;border-top:1px dashed #b98bab;margin:12px 0"><b>Demandes :</b> '+escapeHtml(o.wants):'')+
+ (o.avoid?'<hr style="border:0;border-top:1px dashed #b98bab;margin:12px 0"><b>À éviter :</b> '+escapeHtml(o.avoid):'')+'</div>'+
  '<div class="barcode"></div><p>THANK YOU, PRETTY ♡</p></div>'+
  '<div style="display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin:35px 0"><button class="btn btn-primary" data-action="copy-receipt">COPIER LE REÇU</button><button class="btn" data-action="track-last">SUIVRE MA COMMANDE</button></div>'+
- '<p class="notice" style="text-align:center">Commande enregistrée sur ce navigateur uniquement. Copie le reçu pour l’envoyer à Kiana : il n’est pas transmis automatiquement.</p></div>'
+ '<p class="notice" style="text-align:center">Le reçu est enregistré sur cet appareil. Copie-le pour l’envoyer à Kiana : les commandes ne lui parviennent pas automatiquement.</p></div>'
 }
 function receiptRow(label,v){return '<div class="receipt-line"><span>'+escapeHtml(label)+'</span><span><b>'+escapeHtml(v)+'</b></span></div>'}
 function trackOrder(){
- const num=byId('track-id').value.trim().toUpperCase();
- const phone=phoneDigits(byId('track-phone').value.trim());
- const el=byId('track-result');
- if(!num||phone.length<5){el.innerHTML='<div class="notice">Renseigne ton numéro de commande et ton numéro de téléphone.</div>';return}
- const o=db.orders.find(o=>String(o.id).toUpperCase()===num&&phoneDigits(o.phone)===phone);
- if(!o){el.innerHTML='<div class="notice">Commande introuvable sur cet appareil. Vérifie les informations. Le suivi entre plusieurs appareils nécessitera la synchronisation de la base de données.</div>';return}
- el.innerHTML='<div class="panel" style="margin-top:24px"><span class="eyebrow">FASHION ORDER TRACKING</span><h3 class="serif" style="font-size:2rem;margin:10px 0">'+escapeHtml(o.id)+'</h3>'+
- '<p class="muted">'+escapeHtml(o.name)+' · '+escapeHtml(o.lookName)+'</p>'+
+ const num=byId('track-id').value.trim().toUpperCase(),phone=phoneDigits(byId('track-phone').value.trim()),el=byId('track-result');
+ if(!num||phone.length<5){el.innerHTML='<div class="notice">Renseigne ton numéro de commande et ton téléphone.</div>';return}
+ const o=db.orders.find(o=>String(o.id).toUpperCase()===num&&phoneDigits(o.phone||o.contact)===phone);
+ if(!o){el.innerHTML='<div class="notice">Commande introuvable sur cet appareil. Le suivi entre plusieurs téléphones nécessite une base de données partagée.</div>';return}
+ el.innerHTML='<div class="panel" style="margin-top:24px"><span class="eyebrow">SUIVI DE COMMANDE</span>'+
+ '<h3 class="serif" style="font-size:2rem;margin:10px 0">'+escapeHtml(o.id)+'</h3>'+
+ '<p class="muted">'+escapeHtml(o.name)+' · '+escapeHtml(o.service||'Commande')+'</p>'+
  '<div class="timeline"><div class="node active"><b>✂</b>En préparation</div><div class="node '+(o.status==='Livrée'?'active':'')+'"><b>♡</b>Livrée</div></div>'+
- '<p><strong>Statut actuel :</strong> '+escapeHtml(o.status)+'</p><p class="help">Service : '+escapeHtml(o.service)+' · Couleur : '+escapeHtml(o.color)+'</p></div>'
+ '<p><strong>Statut actuel :</strong> '+escapeHtml(o.status)+'</p>'+
+ (orderItems(o).length?'<p class="help">'+orderItems(o).map(x=>escapeHtml(x.qty+' × '+x.name)).join(' · ')+'</p>':
+ '<p class="help">Création sur mesure à distance · '+escapeHtml(o.color||'Couleur non précisée')+'</p>')+'</div>'
 }
 function renderAbout(){byId('about-bio').textContent=db.bio}
 function submitBooking(){
@@ -269,12 +313,12 @@ function handleCoreAction(a,node){
  if(a==='menu'){const menu=byId('mobile-nav');menu.classList.toggle('open');byId('menu-toggle').setAttribute('aria-expanded',String(menu.classList.contains('open')))}
  else if(a==='detail-look')openLook(id);
  else if(a==='open-photo'){const p=db.photos[Number(id)];if(p)openModal('<div style="text-align:center"><span class="eyebrow">KIANA FASHION DIARY</span><h2 class="serif" style="font-size:2.7rem;margin:12px">'+escapeHtml(p.title)+'</h2></div><div style="height:min(70vh,560px);background:#4e2755;border-radius:12px;overflow:hidden">'+safeImg(p.image,p.title)+'</div>')}
- else if(a==='order-look')openOrder(id);
- else if(a==='order-custom')openOrder(null);
- else if(a==='view-capsule'){chosenFilter=String(id);nav('shop');renderShop()}
- else if(a==='shop-filter'){chosenFilter=String(id);renderShop()}
- else if(a==='customer-fav'){let key=String(id);customerFavs.has(key)?customerFavs.delete(key):customerFavs.add(key);try{localStorage.setItem(FAV_KEY,JSON.stringify([...customerFavs]))}catch{}renderHome();renderShop()}
- else if(a==='source'){source=id==='catalog'?'catalog':'custom';renderCommissionPrice();byId('source-catalog').classList.toggle('active',source==='catalog');byId('source-custom').classList.toggle('active',source==='custom');byId('look-select-wrap').hidden=source!=='catalog'}
+ else if(a==='cart-add')cartAdd(id);
+ else if(a==='go-cart'){closeModal();nav('cart')}
+ else if(a==='cart-inc')cartAdjust(id,1);
+ else if(a==='cart-dec')cartAdjust(id,-1);
+ else if(a==='cart-remove')cartAdjust(id,0);
+ else if(a==='order-custom')openOrder();
  else if(a==='mode'){mode=id==='custom'?'custom':'free';byId('mode-free').classList.toggle('active',mode==='free');byId('mode-custom').classList.toggle('active',mode==='custom');byId('accessory-area').hidden=mode!=='custom'}
  else if(a==='color'){colorSelected=Number(id);colorConfirmed=null;renderColorStatus()}
  else if(a==='confirm-color'){if(colorSelected!==null){colorConfirmed=colorSelected;renderColorStatus();toast(COLOR_LIST[colorSelected][0]+' validée ♡')}}
@@ -291,7 +335,6 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{
  const node=e.target;
  if(node.id==='shop-sort'){chosenSort=node.value;renderShop()}
- if(node.id==='source-select'){selectedProduct=node.value;renderCommissionPrice()}
  if(node.id==='order-service'){const isOther=node.value==='Autre (à préciser)';byId('order-other-wrap').hidden=!isOther;byId('order-other').required=isOther}
  if(node.dataset.adminChange)handleAdminChange(node)
 });
@@ -301,8 +344,9 @@ document.addEventListener('input',e=>{
 });
 document.addEventListener('submit',e=>{
  const id=e.target.id;
- if(['order-form','track-form','booking-form','pin-form','admin-editor-form','admin-capsule-form','admin-month-form','admin-text-form','admin-settings-form','admin-photo-form'].includes(id))e.preventDefault();else return;
+ if(['order-form','cart-checkout-form','track-form','booking-form','pin-form','admin-editor-form','admin-capsule-form','admin-month-form','admin-text-form','admin-settings-form','admin-photo-form'].includes(id))e.preventDefault();else return;
  if(id==='order-form')submitOrder();
+ else if(id==='cart-checkout-form')submitCart();
  else if(id==='track-form')trackOrder();
  else if(id==='booking-form')submitBooking();
  else handleAdminSubmit(id,e.target)
