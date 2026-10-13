@@ -236,7 +236,7 @@ function submitOrder(){
  const [seq,id]=nextOrderId();
  const order={id,kind:'sur-mesure',createdAt:new Date().toISOString(),status:'En préparation',name,phone,
  service:service==='Autre (à préciser)'?'Autre : '+byId('order-other').value.trim():service,
- lookName:'Création sur mesure',items:[],price:null,total:null,
+ lookName:'Création sur mesure à distance',items:[],price:null,total:null,
  mode:mode==='custom'?'Customisation':'Choix libre',color:COLOR_LIST[colorConfirmed][0],
  options,wants:byId('order-wants').value.trim(),avoid:byId('order-avoid').value.trim()};
  if(!storeOrder(order,seq))return;
@@ -298,11 +298,11 @@ function renderAbout(){byId('about-bio').textContent=db.bio}
 function submitBooking(){
  const form=byId('booking-form');
  if(!form.reportValidity())return;
- const msg=['KIANA STUDIO — RENDEZ-VOUS','Nom : '+byId('booking-name').value.trim(),'Contact : '+byId('booking-phone').value.trim(),
+ const msg=['KIANA STUDIO — RENDEZ-VOUS EN PERSONNE','Présence avec Kiana requise : oui','Nom : '+byId('booking-name').value.trim(),'Contact : '+byId('booking-phone').value.trim(),
  'Prestation : '+byId('booking-service').value,'Date souhaitée : '+byId('booking-date').value,
  'Heure souhaitée : '+byId('booking-time').value,'Précisions : '+byId('booking-note').value.trim(),
  'Merci de confirmer la disponibilité.'].join('\n');
- bookingMessage=msg;openModal('<span class="eyebrow">RENDEZ-VOUS</span><h2 class="serif" style="font-size:2.5rem">Demande prête ♡</h2><p class="muted">La date n’est pas réservée automatiquement. Copie ce récapitulatif pour l’envoyer à Kiana.</p><pre style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;color:#fce7f1">'+escapeHtml(msg)+'</pre><button class="btn btn-primary" data-action="copy-booking">COPIER LA DEMANDE</button>')
+ bookingMessage=msg;openModal('<span class="eyebrow">RENDEZ-VOUS</span><h2 class="serif" style="font-size:2.5rem">Demande prête ♡</h2><p class="muted">Ce rendez-vous nécessite ta présence avec Kiana. La date n’est pas confirmée automatiquement : copie la demande pour l’envoyer.</p><pre style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem;color:#fce7f1">'+escapeHtml(msg)+'</pre><button class="btn btn-primary" data-action="copy-booking">COPIER LA DEMANDE</button>')
 }
 function copyText(s){if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(s).then(()=>toast('Copié ♡')).catch(()=>fallbackCopy(s));else fallbackCopy(s)}
 function fallbackCopy(s){window.prompt('Copie le texte :',s)}
