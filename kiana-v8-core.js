@@ -106,6 +106,20 @@ function renderHome(){
 }
 function polaroids(items,startIndex){return items.map((p,i)=>'<button class="polaroid" data-action="open-photo" data-id="'+(startIndex+i)+'"><div class="polaroid-photo">'+safeImg(p.image,p.title)+'</div><strong>'+escapeHtml(p.title)+'</strong><small>KIANA STUDIO · FASHION DIARY</small></button>').join('')||'<p class="muted">De nouvelles photos arrivent bientôt ♡</p>'}
 function renderPortfolio(){byId('portfolio-grid').innerHTML=polaroids(db.photos,0)}
+function lookPhotos(p){
+ const sources=[p?.image,...(Array.isArray(p?.images)?p.images:[])].filter(imageUrl);
+ return [...new Set(sources.map(String))].slice(0,8)
+}
+let activeLookPhoto=0,activeLookId=null;
+function setLookPhoto(index){
+ const p=db.looks.find(x=>String(x.id)===String(activeLookId)),images=lookPhotos(p);
+ if(!images.length)return;
+ activeLookPhoto=(Number(index)+images.length)%images.length;
+ const image=byId('look-gallery-main');
+ if(image){image.src=images[activeLookPhoto];image.alt=(p?.name||'Tenue')+' — photo '+(activeLookPhoto+1)}
+ document.querySelectorAll('[data-action="gallery-photo"]').forEach(x=>x.classList.toggle('active',Number(x.dataset.id)===activeLookPhoto));
+ const counter=byId('look-gallery-counter');if(counter)counter.textContent=(activeLookPhoto+1)+' / '+images.length
+}
 function lookCard(p){
  return '<article class="look-card"><button class="look-photo look-photo-button" data-action="detail-look" data-id="'+escapeHtml(p.id)+'" aria-label="Voir '+escapeHtml(p.name)+'">'+safeImg(p.image,p.name)+'</button>'+
  '<div class="look-info"><small>KIANA STUDIO · FASHION</small><h3>'+escapeHtml(p.name)+'</h3><p>'+escapeHtml(p.desc)+'</p>'+
@@ -121,13 +135,22 @@ function renderShop(){
  updateCartCount()
 }
 function openLook(id){
- const p=db.looks.find(p=>String(p.id)===String(id)&&p.visible!==false);if(!p)return;
- const inCart=cart.find(x=>x.id===String(id))?.qty||0;
- openModal('<div class="detail-grid"><div class="detail-photo">'+safeImg(p.image,p.name)+'</div><div class="detail-info"><span class="eyebrow">KIANA STUDIO · BOUTIQUE</span><h2>'+escapeHtml(p.name)+'</h2><p>'+escapeHtml(p.desc)+'</p>'+
- '<p class="price">'+price(p.price)+'</p><p class="help">Tu peux ajouter plusieurs tenues et choisir les quantités dans ton panier.</p>'+
+ const p=db.looks.find(x=>String(x.id)===String(id)&&x.visible!==false);if(!p)return;
+ activeLookId=String(id);activeLookPhoto=0;
+ const photos=lookPhotos(p),inCart=cart.find(x=>x.id===String(id))?.qty||0;
+ const main=photos.length?'<img id="look-gallery-main" src="'+escapeHtml(photos[0])+'" alt="'+escapeHtml(p.name)+' — photo 1">':
+ '<div class="gallery-placeholder">KIANA ✦</div>';
+ const thumbnails=photos.length>1?
+ '<div class="gallery-thumbs" role="group" aria-label="Autres vues">'+photos.map((url,i)=>
+ '<button type="button" class="gallery-thumb '+(i===0?'active':'')+'" data-action="gallery-photo" data-id="'+i+'" aria-label="Photo '+(i+1)+'"><img src="'+escapeHtml(url)+'" alt=""></button>').join('')+'</div>':
+ '';
+ openModal('<div class="detail-grid"><div><div class="gallery-stage">'+main+'</div>'+thumbnails+
+ (photos.length>1?'<div class="gallery-nav"><span class="gallery-counter" id="look-gallery-counter">1 / '+photos.length+'</span><div><button class="btn btn-small" data-action="gallery-prev">←</button> <button class="btn btn-small" data-action="gallery-next">→</button></div></div>':'')+
+ '</div><div class="detail-info"><span class="eyebrow">KIANA STUDIO · BOUTIQUE</span><h2>'+escapeHtml(p.name)+'</h2><p>'+escapeHtml(p.desc)+'</p>'+
+ '<p class="price">'+price(p.price)+'</p><p class="help">Découvre toutes les photos de cette tenue et ajoute-la au panier.</p>'+
  '<button class="btn btn-primary btn-block" data-action="cart-add" data-id="'+escapeHtml(p.id)+'">+ AJOUTER AU PANIER</button>'+
  (inCart?'<p class="help">'+inCart+' déjà dans le panier</p>':'')+
- '<button class="btn btn-outline btn-block" style="margin-top:10px" data-action="go-cart">VOIR MON PANIER ↗</button></div></div>');
+ '<button class="btn btn-outline btn-block" style="margin-top:10px" data-action="go-cart">VOIR MON PANIER ↗</button></div></div>')
 }
 function openOrder(){
  colorSelected=null;colorConfirmed=null;mode='free';
@@ -318,6 +341,9 @@ function handleCoreAction(a,node){
  const id=node.dataset.id;
  if(a==='menu'){const menu=byId('mobile-nav');menu.classList.toggle('open');byId('menu-toggle').setAttribute('aria-expanded',String(menu.classList.contains('open')))}
  else if(a==='detail-look')openLook(id);
+ else if(a==='gallery-photo')setLookPhoto(Number(id));
+ else if(a==='gallery-prev')setLookPhoto(activeLookPhoto-1);
+ else if(a==='gallery-next')setLookPhoto(activeLookPhoto+1);
  else if(a==='open-photo'){const p=db.photos[Number(id)];if(p)openModal('<div style="text-align:center"><span class="eyebrow">KIANA FASHION DIARY</span><h2 class="serif" style="font-size:2.7rem;margin:12px">'+escapeHtml(p.title)+'</h2></div><div style="height:min(70vh,560px);background:#4e2755;border-radius:12px;overflow:hidden">'+safeImg(p.image,p.title)+'</div>')}
  else if(a==='cart-add')cartAdd(id);
  else if(a==='go-cart'){closeModal();nav('cart')}
