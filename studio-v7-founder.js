@@ -63,7 +63,7 @@ function v7OpenLook(id){
  '<label class="v7-check"><input type="checkbox" id="v7Visible" '+(p.visible!==false?'checked':'')+'> Afficher dans la boutique</label>'+
  '<div class="editor-actions"><button class="btn hot" onclick="v7SaveLook()">ENREGISTRER ♡</button><button class="btn" onclick="v7SetMonthFromGallery()">LOOK DU MOIS ✦</button><button class="btn" onclick="v7DuplicateLook()">DUPLIQUER</button><button class="btn v7-delete" onclick="v7DeleteLook()">SUPPRIMER</button></div>'+
  '</div></div>');
- const modal=document.querySelector('#overlay .dialog');if(modal)modal.style.maxWidth='960px';
+ const modal=document.querySelector('#overlay .dialog');if(modal){modal.style.maxWidth='960px';modal.style.width='min(960px,100%)'}
 }
 function v7PreviewPhoto(url){
  const div=document.getElementById('v7EditorPreview');if(!div)return;
