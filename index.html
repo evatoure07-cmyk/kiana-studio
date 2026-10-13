@@ -20,7 +20,35 @@ html{scroll-behavior:smooth}body{margin:0;background:#fff0f7;color:var(--ink);fo
 @keyframes twinkle{from{opacity:.35;transform:scale(.7) rotate(-12deg)}to{opacity:1;transform:scale(1.2) rotate(18deg)}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes float{50%{transform:translateY(-8px)}}@keyframes wobble{50%{transform:rotate(-9deg)}}@keyframes pop{0%{transform:translateY(50px) scale(.75);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s,transform .7s}.reveal.visible{opacity:1;transform:none}.pop{animation:pop .45s ease-out}
 @media(max-width:800px){.links a:not(.navbtn){display:none}.hero{min-height:570px}.hero h1{font-size:clamp(3.9rem,17vw,7rem)}.aboutlayout,.bookgrid{grid-template-columns:1fr}.polaroids,.products{grid-template-columns:repeat(2,1fr)}.windowbody{grid-template-columns:110px 1fr}.sidebar{padding:10px}.section{padding:65px 0}}@media(max-width:520px){.polaroids,.products{grid-template-columns:1fr}.nav{height:68px}.brand{font-size:1rem}.navbtn{font-size:.7rem;padding:9px}.hero p{font-size:1rem}.sheet{padding:25px}.hero{min-height:520px}.vinyl{width:125px;height:125px}.vinyl:after{inset:40px;font-size:9px}.receipt-star{right:3%;top:5%}.receipt-star.two{left:2%}.receipt-title{font-size:2rem}.receiptdemo{padding:24px}.desktop{box-shadow:6px 6px #97568c}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
-</style></head><body>
+</style><style id="kiana-dark-mood">
+:root{--pink:#f6a3d2;--rose:#eb78b6;--pale:#fce7f5;--cream:#fff0fa;--wine:#e5afd3;--ink:#fff1fa;--gold:#efd38d;--line:#bf82af}
+html{background:#260f2c}body{background:#260f2c;color:#fceaf6;position:relative}body:before{content:"";position:fixed;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(40,13,43,.83),rgba(55,19,55,.75)),url("leopard-rose.png") center/cover no-repeat;pointer-events:none}
+.top{background:#290f2cde;border-bottom:1px solid #f9b6d633;box-shadow:0 4px 28px #1d081c4d}
+.brand{font-family:"Playfair Display",Georgia,serif!important;color:#fff2fa;letter-spacing:0;font-size:1.5rem}
+.links{color:#fff2fa}.navbtn{background:#411946;color:#ffeafa;border-color:#e2a9d2}.navbtn.hot{background:#cf5d9e;color:white}
+.hero{background:linear-gradient(90deg,#250c2de0 0%,#3f1639b5 70%,#4e18425e 100%),url("leopard-rose.png") center/cover;min-height:670px;color:#fff}
+.hero h1{font-family:"Playfair Display",Georgia,serif!important;font-weight:800;letter-spacing:-.045em;font-size:clamp(4.5rem,12vw,9.3rem);color:#fff0f8;text-shadow:0 9px 35px #200b29}.hero h1 span{color:#f7a9d5}.hero p{color:#fbeaf5;font-weight:500}.hero .tiny{color:#ffdb93}
+.display{font-family:"Playfair Display",Georgia,serif!important;letter-spacing:-.045em;line-height:1.06}
+.bubble{background:#441c4d;color:#fff0fa;border:1px solid #ffc9e9;box-shadow:none}.bubble.dark{background:#ea79b7;color:#301333;border:1px solid #ea79b7}.bubble:hover{background:#b94d95;box-shadow:0 8px 22px #1106157d}
+.ribbon{background:#e5a0ca;color:#452043}
+.section{background:transparent!important}.section.portfolio{background:#2a102bbd!important}.section.store{background:#3514388a!important}.appointment{background:linear-gradient(#2d1031c9,#2d1031d7),url("leopard-rose.png") center/cover!important}
+.head h2{color:#fff0fa;font-size:clamp(2.5rem,5vw,4.5rem)}.head p{color:#f1d0e7}.tiny{color:#f5d48b}
+.leopard-card{border:1px solid #f0b4d05e;border-radius:20px;box-shadow:0 15px 45px #1b081e7a;min-height:320px;background:linear-gradient(#70275f6e,#431743af),url("leopard-rose.png") center/cover}.leopard-card .display{font-size:clamp(2.5rem,4vw,4rem)}
+.sheet,.formcard,.product,.receiptdemo{background:#32143bdc;color:#fceafa;border:1px solid #f5b2d64f;box-shadow:0 12px 45px #16081d6b;border-radius:19px}
+.sheet p,.feature p,.product-info p{color:#f5dceb}.sheet h3,.formcard h3{color:#fff}
+.skill span{border-color:#e0a1c9}
+.portfolio .polaroid{background:#f9dcea;color:#3d183a;border-radius:3px}.polaroid p{color:#763d61}
+.products .product .art{background:linear-gradient(145deg,#9b3d7e4d,#431649a6),url("leopard-rose.png") center/cover;color:white}
+.price{color:#ffdca6}.storeactions button{background:#48204e;color:#fff0fa;border:1px solid #da9ac3}.storeactions .add{background:#e98abe;color:#341136}
+.feature h3{color:#fff0fa}.feature>span:last-child{color:#efa5d4!important}
+.formcard label{color:#fae4ef}.formcard input,.formcard select,.formcard textarea{background:#fff2fa;color:#3c153a;border-color:#d29abb}
+.receipt-section{background:#4a1d49bd}.receipt-section .head h2{color:#fff!important}.receiptdemo{background:#ffe8f2;color:#361936;box-shadow:0 20px 50px #18071f88;border:0}.receipt-section .tiny{color:#71375f}
+.bottom{background:linear-gradient(#35133bbd,#40163ec9),url("leopard-rose.png") center/cover}.desktop{border:1px solid #e9a9cf;box-shadow:10px 10px #170b2088}.windowtop{color:#441842}
+footer{background:#260e2ad9;color:#f9deec;border-top:1px solid #edb9d23b}footer a{color:#f6b1d7}
+.floatcart{background:#df78b5}.modal{background:#32143a;color:#ffeafa;border:1px solid #ecb9d8;box-shadow:9px 9px #1d0820}.modal h2{color:#ffc3e5}.modal .formnote{color:#efd2e7}.modal .adminbox{background:#4a2250}.modal .cartrow{border-color:#a77b9b}.modal input,.modal select,.modal textarea{background:#fff4fb;color:#3b183c}.modal .adminbox label{color:#ffdeef}.modal .bubble{background:#ee8abe;color:#3a153e}
+.close{background:#eba8d3;color:#391636}.toast{background:#36163c;color:#fff;border-color:#f7b8d9}
+@media(max-width:600px){.hero{min-height:555px}.hero h1{font-size:clamp(4.2rem,15vw,6.5rem)}.sheet{padding:26px}}
+</style><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&display=swap" rel="stylesheet"></head><body>
 <header class="top"><nav class="wrap nav"><a class="brand" href="#home">KIANA STUDIO ✦</a><div class="links"><a href="#about">À PROPOS</a><a href="#portfolio">LOOKBOOK</a><a href="#shop">BOUTIQUE</a><a href="#booking">RDV RP</a><button class="navbtn" onclick="openModal('cart')">PANIER ♡ <span id="cartCount">0</span></button></div></nav></header>
 <main><section id="home" class="hero"><span class="spark a">✧</span><span class="spark b">✦</span><span class="spark c">✧</span><div class="vinyl" aria-hidden="true"></div><div class="wrap"><span class="tiny">FLASHFA ROLEPLAY ✦ FASHION & STYLING</span><h1 class="display">KIANA<br><span>STUDIO.</span></h1><p id="heroTxt">Good girls dress up. Bad girls set the trends. Un studio de stylisme 100 % RP, où chaque tenue a sa propre personnalité.</p><div class="hero-actions"><a href="#shop" class="bubble dark">SHOP THE LOOKS ↗</a><a href="#booking" class="bubble">PRENDRE RDV ♡</a></div></div></section>
 <div class="ribbon">BAD GIRLS HAVE GOOD STYLE <span>✦</span> FLASHFA FASHION <span>✦</span> DRESS TO IMPRESS</div>
