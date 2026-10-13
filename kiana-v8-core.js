@@ -39,7 +39,7 @@ const DEFAULT_STATE={
  intro:'Une maison de style imaginée pour celles et ceux qui aiment se démarquer. Du dressing à la création sur mesure, chaque détail compte.',
  bio:'Je suis Kiana, passionnée de mode, de tendances et d’assemblages qui font la différence. Avec KIANA STUDIO, j’imagine des tenues affirmées, glamour ou décontractées, toujours pensées pour mettre en valeur chaque personnalité.',
  heroImage:FALLBACK_IMG[0],looks:DEFAULT_LOOKS,capsules:DEFAULT_CAPSULES,
- monthEnabled:true,monthLookId:1,monthTitle:'',monthDescription:'',orders:[],appointments:[],photos:[],
+ monthEnabled:true,monthLookId:1,monthTitle:'',monthDescription:'',orders:[],appointments:[],photos:[{title:'CITY GIRL',image:FALLBACK_IMG[0]},{title:'AFTER DARK',image:FALLBACK_IMG[1]},{title:'THE IT GIRL',image:FALLBACK_IMG[2]}],
  orderSequence:0
 };
 const byId=id=>document.getElementById(id);
@@ -56,6 +56,7 @@ function initialState(){
  if(!Array.isArray(db.looks))db.looks=structuredClone(DEFAULT_LOOKS);
  if(!Array.isArray(db.orders))db.orders=[];
  if(!Array.isArray(db.appointments))db.appointments=[];
+ if(!Array.isArray(db.photos))db.photos=[];
  if(!Array.isArray(old.capsules))db.capsules=Array.isArray(db.seasons)?db.seasons.map(s=>({id:String(s.id||uid()),name:s.name,category:s.category||'Baddie',description:s.description,image:s.image,visible:s.active!==false})):structuredClone(DEFAULT_CAPSULES);
  db.looks=db.looks.map((p,i)=>({...p,id:p.id||uid(),desc:p.desc||'',price:Number(p.price)||0,visible:p.visible!==false,likedByFounder:!!(p.likedByFounder??p.featured),capsuleId:p.capsuleId||(db.capsules.find(x=>x.category===p.category)?.id||'')}));
  db.capsules=db.capsules.map(c=>({...c,id:String(c.id||uid()),visible:c.visible!==false}));
@@ -71,7 +72,7 @@ function save(){
 }
 function toast(s){let t=byId('toast');t.textContent=s;t.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove('show'),3200)}
 function nav(page){
- const allowed=['home','shop','commission','tracking','booking','about','receipt','founder'];
+ const allowed=['home','shop','portfolio','commission','tracking','booking','about','receipt','founder'];
  if(!allowed.includes(page))page='home';
  if(page==='founder'&&!founderUnlocked){openGate();return}
  if(location.hash!=='#'+page){location.hash=page}else showRoute()
@@ -85,12 +86,13 @@ function showRoute(){
  byId('mobile-nav').classList.remove('open');byId('menu-toggle').setAttribute('aria-expanded','false');
  if(page==='home')renderHome();
  if(page==='shop')renderShop();
+ if(page==='portfolio')renderPortfolio();
  if(page==='commission')renderCommission();
  if(page==='receipt')renderReceipt();
  if(page==='about')renderAbout();
  if(page==='founder')renderAdmin();
  window.scrollTo({top:0,behavior:'auto'});
- document.title=(page==='home'?'KIANA STUDIO':({shop:'La boutique',commission:'Créer ma tenue',tracking:'Suivi de commande',booking:'Rendez-vous',about:'À propos',receipt:'Mon reçu',founder:'Backstage'}[page]||'KIANA STUDIO')+' | KIANA STUDIO');
+ document.title=(page==='home'?'KIANA STUDIO':({shop:'La boutique',portfolio:'Lookbook',commission:'Créer ma tenue',tracking:'Suivi de commande',booking:'Rendez-vous',about:'À propos',receipt:'Mon reçu',founder:'Backstage'}[page]||'KIANA STUDIO')+' | KIANA STUDIO');
 }
 function capsuleFor(p){return db.capsules.find(c=>String(c.id)===String(p.capsuleId))}
 function renderHome(){
@@ -108,8 +110,11 @@ function renderHome(){
  const published=db.looks.filter(p=>p.visible!==false);
  const loved=published.filter(p=>p.likedByFounder);
  const picks=[...loved,...published.filter(p=>!p.likedByFounder)].slice(0,3);
- byId('home-looks').innerHTML=picks.map(lookCard).join('')||'<p class="muted">Des looks arrivent bientôt ♡</p>'
+ byId('home-looks').innerHTML=picks.map(lookCard).join('')||'<p class="muted">Des looks arrivent bientôt ♡</p>';
+ byId('home-portfolio').innerHTML=polaroids(db.photos.slice(0,3),0)
 }
+function polaroids(items,startIndex){return items.map((p,i)=>'<button class="polaroid" data-action="open-photo" data-id="'+(startIndex+i)+'"><div class="polaroid-photo">'+safeImg(p.image,p.title)+'</div><strong>'+escapeHtml(p.title)+'</strong><small>KIANA STUDIO · FASHION DIARY</small></button>').join('')||'<p class="muted">De nouvelles photos arrivent bientôt ♡</p>'}
+function renderPortfolio(){byId('portfolio-grid').innerHTML=polaroids(db.photos,0)}
 function lookCard(p){
  const fav=customerFavs.has(String(p.id));
  return '<article class="look-card"><div class="look-photo">'+safeImg(p.image,p.name)+(p.likedByFounder?'<span class="pill">♡ COUP DE CŒUR</span>':'')+
@@ -263,6 +268,7 @@ function handleCoreAction(a,node){
  const id=node.dataset.id;
  if(a==='menu'){const menu=byId('mobile-nav');menu.classList.toggle('open');byId('menu-toggle').setAttribute('aria-expanded',String(menu.classList.contains('open')))}
  else if(a==='detail-look')openLook(id);
+ else if(a==='open-photo'){const p=db.photos[Number(id)];if(p)openModal('<div style="text-align:center"><span class="eyebrow">KIANA FASHION DIARY</span><h2 class="serif" style="font-size:2.7rem;margin:12px">'+escapeHtml(p.title)+'</h2></div><div style="height:min(70vh,560px);background:#4e2755;border-radius:12px;overflow:hidden">'+safeImg(p.image,p.title)+'</div>')}
  else if(a==='order-look')openOrder(id);
  else if(a==='order-custom')openOrder(null);
  else if(a==='view-capsule'){chosenFilter=String(id);nav('shop');renderShop()}
@@ -295,7 +301,7 @@ document.addEventListener('input',e=>{
 });
 document.addEventListener('submit',e=>{
  const id=e.target.id;
- if(['order-form','track-form','booking-form','pin-form','admin-editor-form','admin-capsule-form','admin-month-form','admin-text-form','admin-settings-form'].includes(id))e.preventDefault();else return;
+ if(['order-form','track-form','booking-form','pin-form','admin-editor-form','admin-capsule-form','admin-month-form','admin-text-form','admin-settings-form','admin-photo-form'].includes(id))e.preventDefault();else return;
  if(id==='order-form')submitOrder();
  else if(id==='track-form')trackOrder();
  else if(id==='booking-form')submitBooking();
