@@ -16,11 +16,11 @@ drawAll=function(){v5DrawAllBefore();v5RenderSeasons();v5RenderMonth()};
 function v5RenderSeasons(){
  const el=document.getElementById("seasonCards");if(!el)return;
  const seasons=db.seasons.filter(s=>s.active!==false);
- el.innerHTML=seasons.map(s=>'<button class="season-card" onclick="v5OpenSeason('+JSON.stringify(s.id)+')">'+(img(s.image)?'<img src="'+esc(img(s.image))+'" alt="" loading="lazy">':'')+'<span class="season-spark">✦</span><div class="content"><span class="eyebrow">KIANA CAPSULE COLLECTION</span><strong>'+esc(s.name)+'</strong><p>'+esc(s.description)+'</p><span>VOIR LA COLLECTION ↗</span></div></button>').join('');
+ el.innerHTML=seasons.map(s=>'<button class="season-card" onclick="v5OpenSeason('+db.seasons.indexOf(s)+')">'+(img(s.image)?'<img src="'+esc(img(s.image))+'" alt="" loading="lazy">':'')+'<span class="season-spark">✦</span><div class="content"><span class="eyebrow">KIANA CAPSULE COLLECTION</span><strong>'+esc(s.name)+'</strong><p>'+esc(s.description)+'</p><span>VOIR LA COLLECTION ↗</span></div></button>').join('');
  if(!seasons.length)el.innerHTML='<p>Une nouvelle collection arrive bientôt ♡</p>';
 }
-function v5OpenSeason(id){
- const s=db.seasons.find(x=>x.id===id);if(!s)return;
+function v5OpenSeason(index){
+ const s=db.seasons[index];if(!s)return;
  category=s.category;navigate("shop");drawShop();studioToast('Collection '+s.name+' ♡')
 }
 function v5RenderMonth(){
@@ -42,15 +42,16 @@ function v5OpenFitting(id){
 detail=function(id){v5OpenFitting(id)};
 add=function(id){v5OpenFitting(id)};
 function v5Choice(buttons,type){
- return buttons.map(v=>'<button class="outfit-choice '+(v5Fitting[type]===v?'active':'')+'" onclick="v5Fitting['+JSON.stringify(type)+']='+JSON.stringify(v)+';v5ShowFitting()">'+esc(v)+'</button>').join('')
+ return buttons.map((v,i)=>'<button class="outfit-choice '+(v5Fitting[type]===v?'active':'')+'" onclick="v5SetChoice(\''+type+'\','+i+')">'+esc(v)+'</button>').join('')
 }
+function v5SetChoice(type,index){const p=db.looks.find(x=>x.id===v5Fitting?.id);if(!p)return;const list=type==='color'?v5Options(p.colors,['Rose','Violet','Noir']):v5Options(p.sizes,['XS','S','M','L','XL']);if(list[index]!==undefined)v5Fitting[type]=list[index];v5ShowFitting()}
 const v5Extras=[{id:"accessories",label:"Bijoux et accessoires assortis",price:120},{id:"bag",label:"Sac coordonné",price:180},{id:"shoes",label:"Chaussures supplémentaires",price:210}];
 function v5Total(p){return Number(p.price||0)+v5Extras.filter(x=>v5Fitting.extras.includes(x.id)).reduce((sum,x)=>sum+x.price,0)}
 function v5ToggleExtra(id){let a=v5Fitting.extras;v5Fitting.extras=a.includes(id)?a.filter(x=>x!==id):a.concat(id);v5ShowFitting()}
 function v5ShowFitting(){
  const p=db.looks.find(x=>x.id===v5Fitting?.id);if(!p)return;
  const colors=v5Options(p.colors,['Rose','Violet','Noir']),sizes=v5Options(p.sizes,['XS','S','M','L','XL']);
- const extras=v5Extras.map(x=>'<label class="outfit-extra"><input type="checkbox" '+(v5Fitting.extras.includes(x.id)?'checked':'')+' onchange="v5ToggleExtra('+JSON.stringify(x.id)+')"><span>'+esc(x.label)+'</span><b>+'+money(x.price)+'</b></label>').join('');
+ const extras=v5Extras.map(x=>'<label class="outfit-extra"><input type="checkbox" '+(v5Fitting.extras.includes(x.id)?'checked':'')+' onchange="v5ToggleExtra(\''+x.id+'\')"><span>'+esc(x.label)+'</span><b>+'+money(x.price)+'</b></label>').join('');
  showModal('<div class="outfit-grid"><div class="outfit-photo">'+(img(p.image)?'<img src="'+esc(img(p.image))+'" alt="'+esc(p.name)+'">':'<div style="padding:30px">KIANA LOOK ♡</div>')+'</div><div class="outfit-config"><span class="eyebrow">THE KIANA FITTING ROOM</span><h2>'+esc(p.name)+'</h2><p>'+esc(p.desc)+'</p><div class="outfit-sub">Composition de la tenue</div><div class="outfit-pieces">'+v5Pieces(p).map(x=>'<span class="outfit-piece">✦ '+esc(x)+'</span>').join('')+'</div><div class="outfit-sub">Couleur RP</div><div class="outfit-choices">'+v5Choice(colors,'color')+'</div><div class="outfit-sub">Taille RP</div><div class="outfit-choices">'+v5Choice(sizes,'size')+'</div><div class="outfit-sub">Options à ajouter</div>'+extras+'<div class="outfit-end"><strong>'+money(v5Total(p))+'</strong><button class="btn hot" onclick="v5AddCustomized()">AJOUTER AU PANIER ♡</button></div><p class="hint">Choix et tarifs RP fictifs. Les variantes sont des indications pour le stylisme, pas un essayage 3D.</p></div></div>');
 }
 function v5AddCustomized(){
