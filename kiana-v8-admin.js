@@ -42,25 +42,25 @@ function renderAdmin(){
   const open=db.orders.filter(o=>o.status==='En préparation').length;
   el.innerHTML=adminHeader('Bonjour, Kiana ♡','Tout ton studio au même endroit, sans formulaires inutiles.')+
   '<div class="kpis"><div class="kpi"><strong>'+db.looks.filter(p=>p.visible!==false).length+'</strong><span>Tenues en boutique</span></div><div class="kpi"><strong>'+open+'</strong><span>Commandes à préparer</span></div><div class="kpi"><strong>'+db.orders.filter(o=>o.status==='Livrée').length+'</strong><span>Commandes livrées</span></div></div>'+
-  '<div class="panel" style="margin-bottom:18px;background:linear-gradient(120deg,#6b2f60,#3b1943)"><span class="eyebrow">TON STUDIO, TES CRÉATIONS</span><h3 class="serif" style="font-size:2rem;margin:10px 0">Un dressing qui te ressemble.</h3><p class="help">Ajoute tes tenues, organise les collections et retrouve les commandes dans deux clics.</p><button class="btn btn-primary" data-action="admin-new-look">+ AJOUTER UNE TENUE</button></div>'+
-  '<div class="quick-grid"><button class="quick" data-action="admin-tab" data-id="looks"><strong>♡ Mon dressing ↗</strong><small>Photos, favoris, visibilité et prix</small></button>'+
-  '<button class="quick" data-action="admin-tab" data-id="capsules"><strong>✦ Collections ↗</strong><small>Capsules et look du mois</small></button>'+
+  '<div class="panel" style="margin-bottom:18px;background:linear-gradient(120deg,#6b2f60,#3b1943)"><span class="eyebrow">TON STUDIO, TES CRÉATIONS</span><h3 class="serif" style="font-size:2rem;margin:10px 0">Un dressing qui te ressemble.</h3><p class="help">Ajoute tes tenues, consulte les commandes de la boutique ou les demandes sur mesure au même endroit.</p><button class="btn btn-primary" data-action="admin-new-look">+ AJOUTER UNE TENUE</button></div>'+
+  '<div class="quick-grid"><button class="quick" data-action="admin-tab" data-id="looks"><strong>♡ Mon dressing ↗</strong><small>Photos, visibilité et prix</small></button>'+
+  '<button class="quick" data-action="admin-tab" data-id="portfolio"><strong>▣ Lookbook ↗</strong><small>Photos de la galerie</small></button>'+
   '<button class="quick" data-action="admin-tab" data-id="orders"><strong>▤ Commandes ↗</strong><small>Préparation, livraison et suppression</small></button>'+
   '<button class="quick" data-action="admin-tab" data-id="presentation"><strong>✎ Présentation ↗</strong><small>Textes et image d’accueil</small></button></div>'+
   '<div class="notice" style="margin-top:20px">Démo locale : les commandes d’autres clients n’apparaissent pas ici et tes éditions ne se publient pas sur leurs appareils. La connexion Supabase sécurisée reste à réaliser.</div>';
  } else if(adminTab==='looks')renderAdminLooks();
  else if(adminTab==='portfolio')renderAdminPortfolio();
- else if(adminTab==='capsules')renderAdminCapsules();
  else if(adminTab==='orders')renderAdminOrders();
  else if(adminTab==='presentation')renderAdminPresentation();
  else if(adminTab==='settings')renderAdminSettings();
 }
 function renderAdminLooks(){
  const el=byId('admin-body');
- el.innerHTML=adminHeader('Mon dressing','Clique sur une photo pour ouvrir sa fiche. Le cœur se règle directement sur l’image.',
- '<button class="btn btn-primary btn-small" data-action="admin-new-look">+ TENUE</button>')+
+ if(adminFilter==='liked')adminFilter='all';
+ el.innerHTML=adminHeader('Toutes mes tenues','Toutes les photos au même endroit. Clique sur une tenue pour la modifier.',
+ '<button class="btn btn-primary btn-small" data-action="admin-new-look">+ NOUVELLE TENUE</button>')+
  '<div class="toolbar"><input class="field" data-admin-input="looks-search" placeholder="Chercher une tenue..." value="'+escapeHtml(adminSearch)+'">'+
- '<select class="field" style="width:190px" data-admin-change="looks-filter"><option value="all">Toutes les tenues</option><option value="liked">♡ Mes coups de cœur</option><option value="visible">Visibles</option><option value="hidden">Masquées</option></select></div>'+
+ '<select class="field" style="width:190px" data-admin-change="looks-filter"><option value="all">Toutes les tenues</option><option value="visible">Visibles</option><option value="hidden">Masquées</option></select></div>'+
  '<p class="help" id="admin-look-count"></p><div class="admin-gallery" id="admin-look-gallery"></div>';
  el.querySelector('[data-admin-change="looks-filter"]').value=adminFilter;
  updateAdminGallery()
@@ -68,86 +68,55 @@ function renderAdminLooks(){
 function updateAdminGallery(){
  const target=byId('admin-look-gallery');if(!target)return;
  let looks=db.looks;
- if(adminFilter==='liked')looks=looks.filter(p=>p.likedByFounder);
  if(adminFilter==='visible')looks=looks.filter(p=>p.visible!==false);
  if(adminFilter==='hidden')looks=looks.filter(p=>p.visible===false);
  const search=adminSearch.toLowerCase().trim();
  if(search)looks=looks.filter(p=>(p.name+' '+p.desc).toLowerCase().includes(search));
- byId('admin-look-count').textContent=looks.length+' tenue'+(looks.length>1?'s':'')+' · Défile pour toutes les voir';
+ byId('admin-look-count').textContent=looks.length+' tenue'+(looks.length>1?'s':'')+' · Fais défiler pour toutes les parcourir';
  target.innerHTML=looks.map(p=>'<div class="admin-look"><button class="admin-look-photo" data-action="admin-edit-look" data-id="'+escapeHtml(p.id)+'" aria-label="Modifier '+escapeHtml(p.name)+'">'+safeImg(p.image,p.name)+'</button>'+
- '<button class="admin-heart '+(p.likedByFounder?'liked':'')+'" data-action="admin-heart" data-id="'+escapeHtml(p.id)+'" aria-label="Coup de cœur">'+(p.likedByFounder?'♥':'♡')+'</button>'+
- '<div class="admin-look-info"><strong>'+escapeHtml(p.name)+'</strong><small>'+price(p.price)+' · '+(p.visible!==false?'Visible':'Masquée')+'</small></div></div>').join('')||'<p class="muted">Aucune tenue dans ce filtre.</p>'
+ '<div class="admin-look-info"><strong>'+escapeHtml(p.name)+'</strong><small>'+price(p.price)+' · '+(p.visible!==false?'Visible':'Masquée')+'</small></div></div>').join('')||
+ '<div class="panel">Aucune tenue dans ce filtre.</div>'
 }
 function openLookEditor(id){
  const p=db.looks.find(x=>String(x.id)===String(id));if(!p)return;
  editorId=String(p.id);editorImage=p.image||'';
- const capsules='<option value="">Sans collection</option>'+db.capsules.map(c=>'<option value="'+escapeHtml(c.id)+'" '+(p.capsuleId===c.id?'selected':'')+'>'+escapeHtml(c.name)+'</option>').join('');
- openModal('<div class="detail-grid"><div><div class="detail-photo" id="editor-photo-preview">'+safeImg(editorImage,p.name)+'</div><p class="help" style="margin-top:13px">Importe une photo ou colle une adresse HTTPS, puis enregistre.</p></div>'+
- '<div><span class="eyebrow">ÉDITER UNE TENUE</span><h2 class="serif" style="font-size:2.1rem;margin:8px 0 16px">'+escapeHtml(p.name)+'</h2>'+
+ openModal('<div class="detail-grid"><div><div class="detail-photo" id="editor-photo-preview">'+safeImg(editorImage,p.name)+'</div><p class="help" style="margin-top:13px">Importe une image ou colle son adresse, puis enregistre.</p></div>'+
+ '<div><span class="eyebrow">FICHE DE LA TENUE</span><h2 class="serif" style="font-size:2.1rem;margin:8px 0 16px">'+escapeHtml(p.name)+'</h2>'+
  '<form id="admin-editor-form" class="admin-form">'+
  '<label>Nom de la tenue</label><input class="field" name="name" maxlength="90" required value="'+escapeHtml(p.name)+'">'+
- '<div class="inline-fields"><div><label>Prix ($)</label><input class="field" name="price" type="number" min="0" max="9999999" value="'+Number(p.price)||0+'"></div>'+
- '<div><label>Style</label><select class="field" name="category">'+['Baddie','Glam','Y2K','Soft'].map(c=>'<option '+(c===p.category?'selected':'')+'>'+c+'</option>').join('')+'</select></div></div>'+
- '<label>Collection capsule</label><select class="field" name="capsuleId">'+capsules+'</select>'+
+ '<label>Prix ($)</label><input class="field" name="price" type="number" min="0" max="9999999" value="'+(Number(p.price)||0)+'">'+
  '<label>Petite description</label><textarea class="field" name="desc" maxlength="1200" rows="3">'+escapeHtml(p.desc)+'</textarea>'+
  '<label>Adresse HTTPS de la photo</label><input class="field" name="image" id="editor-url" value="'+escapeHtml(imageUrl(p.image))+'" data-admin-input="image-preview">'+
  '<label>Ou choisir une photo</label><input class="field" type="file" accept="image/*" data-admin-change="image-file">'+
  '<label style="display:flex;gap:9px;align-items:center"><input type="checkbox" name="visible" '+(p.visible!==false?'checked':'')+'> Visible en boutique</label>'+
- '<div class="admin-actions"><button class="btn btn-primary" type="submit">ENREGISTRER ♡</button><button type="button" class="btn btn-small" data-action="admin-duplicate-look">DUPLIQUER</button><button type="button" class="btn btn-small btn-danger" data-action="admin-delete-look">SUPPRIMER</button></div>'+
- '</form></div></div>');
+ '<div class="admin-actions"><button class="btn btn-primary" type="submit">ENREGISTRER</button><button type="button" class="btn btn-small" data-action="admin-duplicate-look">DUPLIQUER</button><button type="button" class="btn btn-small btn-danger" data-action="admin-delete-look">SUPPRIMER</button></div>'+
+ '</form></div></div>')
 }
 function saveLookEditor(form){
  const p=db.looks.find(x=>String(x.id)===editorId);if(!p)return;
  const fd=new FormData(form),name=String(fd.get('name')||'').trim();
  if(!name){toast('Il faut donner un nom à la tenue.');return}
- p.name=name;p.price=Math.max(0,Math.min(9999999,Number(fd.get('price'))||0));p.category=String(fd.get('category'));
- p.capsuleId=String(fd.get('capsuleId'));p.desc=String(fd.get('desc')||'');p.image=editorImage;
+ p.name=name;p.price=Math.max(0,Math.min(9999999,Number(fd.get('price'))||0));
+ p.desc=String(fd.get('desc')||'');p.image=editorImage;
  p.visible=fd.get('visible')!==null;
  if(save()){closeModal();renderAdminLooks();renderHome();toast('Tenue mise à jour sur cet appareil ♡')}
 }
 function newLook(){
- const p={id:uid(),name:'Nouvelle création',price:0,category:'Baddie',capsuleId:db.capsules[0]?.id||'',desc:'',image:'',visible:false,likedByFounder:false};
+ const p={id:uid(),name:'Nouvelle tenue',price:0,desc:'',image:'',visible:false};
  db.looks.unshift(p);if(save()){renderAdminLooks();openLookEditor(p.id)}
 }
 function duplicateLook(){
  const p=db.looks.find(x=>String(x.id)===editorId);if(!p)return;
- const copy={...p,id:uid(),name:p.name+' (copie)',visible:false,likedByFounder:false};
+ const copy={...p,id:uid(),name:p.name+' (copie)',visible:false};
  db.looks.unshift(copy);if(save()){closeModal();renderAdminLooks();openLookEditor(copy.id)}
 }
 function deleteLook(){
  const p=db.looks.find(x=>String(x.id)===editorId);if(!p)return;
  if(!confirm('Supprimer définitivement « '+p.name+' » de ce navigateur ?'))return;
  db.looks=db.looks.filter(x=>String(x.id)!==editorId);
- if(String(db.monthLookId)===editorId){db.monthEnabled=false;db.monthLookId=null}
  if(save()){closeModal();renderAdminLooks();renderHome();toast('Tenue supprimée')}
 }
-function renderAdminCapsules(){
- const el=byId('admin-body');
- const published=db.looks.filter(p=>p.visible!==false);
- const current=db.looks.find(p=>String(p.id)===String(db.monthLookId));
- el.innerHTML=adminHeader('Collections & vitrine','Crée des capsules, choisis leurs photos et décide du look du mois.',
- '<button class="btn btn-primary btn-small" data-action="admin-new-capsule">+ COLLECTION</button>')+
- '<div class="panel" style="margin-bottom:20px"><span class="eyebrow">THE MONTHLY EDIT</span><h3 class="serif" style="font-size:1.9rem;margin:12px 0">Look du mois ♡</h3>'+
- '<form class="admin-form" id="admin-month-form"><label>Tenue mise en avant</label><select class="field" name="lookId">'+
- published.map(p=>'<option value="'+escapeHtml(p.id)+'" '+(String(db.monthLookId)===String(p.id)?'selected':'')+'>'+escapeHtml(p.name)+'</option>').join('')+'</select>'+
- '<div class="admin-split"><div><label>Titre (facultatif)</label><input class="field" name="title" value="'+escapeHtml(db.monthTitle||'')+'" placeholder="Ex. IT GIRL OF THE MONTH"></div><div><label>Affichage</label><p class="help">'+(db.monthEnabled!==false&&current?'Actuellement visible sur l’accueil':'Actuellement masqué')+'</p></div></div>'+
- '<label>Petite phrase (facultatif)</label><textarea class="field" name="description" rows="2" maxlength="600">'+escapeHtml(db.monthDescription||'')+'</textarea>'+
- '<div class="admin-actions"><button class="btn btn-primary btn-small" type="submit">AFFICHER LE LOOK DU MOIS</button><button type="button" class="btn btn-danger btn-small" data-action="admin-remove-month">RETIRER</button></div></form></div>'+
- '<h3 class="serif" style="font-size:1.6rem">Collections capsules</h3><p class="help">Les tenues sont reliées aux capsules dans leur fiche. Clique sur une collection pour la modifier.</p>'+
- db.capsules.map(c=>'<details class="admin-record"><summary>'+escapeHtml(c.name)+' · '+(c.visible!==false?'Visible':'Masquée')+' ↗</summary>'+
- '<form class="admin-form" data-capsule-id="'+escapeHtml(c.id)+'" id="admin-capsule-form">'+
- '<label>Nom</label><input class="field" name="name" value="'+escapeHtml(c.name)+'" required maxlength="80">'+
- '<label>Texte de présentation</label><textarea class="field" name="description" maxlength="600">'+escapeHtml(c.description)+'</textarea>'+
- '<label>Image de la collection (URL)</label><input class="field" name="image" value="'+escapeHtml(imageUrl(c.image))+'">'+
- '<label style="display:flex;gap:8px"><input type="checkbox" name="visible" '+(c.visible!==false?'checked':'')+'> Visible sur l’accueil</label>'+
- '<div class="admin-actions"><button type="submit" class="btn btn-primary btn-small">ENREGISTRER</button><button type="button" class="btn btn-danger btn-small" data-action="admin-delete-capsule" data-id="'+escapeHtml(c.id)+'">SUPPRIMER</button></div></form></details>').join('')+
- '<p class="notice" style="margin-top:18px">Les capsules servent à organiser le catalogue. Une tenue peut être rattachée à une capsule depuis sa fiche.</p>'
-}
-function saveCapsule(form){
- const item=db.capsules.find(c=>c.id===form.dataset.capsuleId);if(!item)return;
- const fd=new FormData(form);item.name=String(fd.get('name')).trim()||item.name;item.description=String(fd.get('description')||'');item.image=String(fd.get('image')||'');item.visible=fd.get('visible')!==null;
- if(save()){renderAdminCapsules();renderHome();toast('Collection enregistrée ♡')}
-}
+
 function renderAdminOrders(){
  const el=byId('admin-body');
  el.innerHTML=adminHeader('Commandes','Deux statuts simples : En préparation ou Livrée.')+
@@ -161,15 +130,22 @@ function updateAdminOrders(){
  const panel=byId('admin-order-list');if(!panel)return;
  const q=adminSearch.toLowerCase().trim();
  const orders=db.orders.filter(o=>(String(o.id)+' '+String(o.name)+' '+String(o.phone)).toLowerCase().includes(q));
- panel.innerHTML=orders.map(o=>'<article class="admin-order" data-order-id="'+escapeHtml(o.id)+'"><div class="admin-order-head"><div><strong>'+escapeHtml(o.id)+'</strong><br><small>'+new Date(o.createdAt||Date.now()).toLocaleString('fr-FR')+' · '+escapeHtml(o.name)+'</small></div><span class="price">'+price(o.price??o.total??null)+'</span></div>'+
- '<p><b>Téléphone :</b> '+escapeHtml(o.phone||o.contact||'Non indiqué')+'\n<b>Service :</b> '+escapeHtml(o.service||'Commande')+
- '\n<b>Tenue :</b> '+escapeHtml(o.lookName||o.items?.[0]?.name||'Création')+
- '\n<b>Mode :</b> '+escapeHtml(o.mode||'Choix libre')+'\n<b>Couleur :</b> '+escapeHtml(o.color||'Non précisée')+
- '\n<b>Personnalisation :</b> '+escapeHtml(orderOptionsText(o))+
- '\n<b>Envies :</b> '+escapeHtml(o.wants||'Aucune précision')+'\n<b>À éviter :</b> '+escapeHtml(o.avoid||'Aucune précision')+'</p>'+
+ panel.innerHTML=orders.map(o=>{
+ const items=orderItems(o),isShop=o.kind==='boutique'||items.length>0;
+ const content=isShop?
+ '<p><b>Articles commandés :</b></p><div class="order-admin-products">'+items.map(item=>
+ '<div class="order-admin-product"><span>'+escapeHtml(item.qty+' × '+item.name)+'</span><strong>'+price(Number(item.price)*Number(item.qty))+'</strong></div>').join('')+'</div>':
+ '<p><b>Création sur mesure à distance</b>\nMode : '+escapeHtml(o.mode||'Choix libre')+
+ '\nCouleur : '+escapeHtml(o.color||'Non précisée')+
+ '\nOptions : '+escapeHtml(orderOptionsText(o))+
+ '\nEnvies : '+escapeHtml(o.wants||'Aucune précision')+
+ '\nÀ éviter : '+escapeHtml(o.avoid||'Aucune précision')+'</p>';
+ return '<article class="admin-order" data-order-id="'+escapeHtml(o.id)+'"><div class="admin-order-head"><div><strong>'+escapeHtml(o.id)+'</strong><br><small>'+escapeHtml(o.name)+' · '+escapeHtml(o.phone||o.contact||'Numéro non indiqué')+'</small></div><span class="price">'+price(orderAmount(o))+'</span></div>'+
+ '<p><b>Service :</b> '+escapeHtml(o.service||'Commande')+'</p>'+content+
+ (isShop&&o.wants?'<p><b>Précisions :</b> '+escapeHtml(o.wants)+'</p>':'')+
  '<div class="admin-actions"><select class="field" aria-label="Statut de la commande" style="width:210px" data-admin-change="order-status" data-id="'+escapeHtml(o.id)+'"><option '+(o.status==='En préparation'?'selected':'')+'>En préparation</option><option '+(o.status==='Livrée'?'selected':'')+'>Livrée</option></select>'+
- '<button class="btn btn-danger btn-small" data-action="admin-delete-order" data-id="'+escapeHtml(o.id)+'">SUPPRIMER</button></div></article>').join('')||
- '<div class="panel">Aucune commande locale pour le moment.</div>'
+ '<button class="btn btn-danger btn-small" data-action="admin-delete-order" data-id="'+escapeHtml(o.id)+'">SUPPRIMER</button></div></article>'
+ }).join('')||'<div class="panel">Aucune commande locale pour le moment.</div>'
 }
 function renderAdminPresentation(){
  byId('admin-body').innerHTML=adminHeader('Présentation','Une seule page pour modifier les textes et la grande photo de l’accueil.')+
@@ -193,13 +169,14 @@ function handleAdminAction(a,node){
  else if(a==='admin-edit-photo')openPhotoEditor(Number(id));
  else if(a==='admin-delete-photo')deletePhoto();
  else if(a==='admin-edit-look')openLookEditor(id);
- else if(a==='admin-heart'){const p=db.looks.find(x=>String(x.id)===String(id));if(!p)return;p.likedByFounder=!p.likedByFounder;if(save()){updateAdminGallery();renderHome();toast(p.likedByFounder?'Ajouté aux coups de cœur ♡':'Retiré des coups de cœur')}}
  else if(a==='admin-duplicate-look')duplicateLook();
  else if(a==='admin-delete-look')deleteLook();
- else if(a==='admin-new-capsule'){db.capsules.push({id:uid(),name:'Nouvelle collection',description:'À personnaliser',image:'',visible:false});if(save()){renderAdminCapsules();toast('Collection créée ♡')}}
- else if(a==='admin-delete-capsule'){const c=db.capsules.find(x=>x.id===id);if(!c||!confirm('Supprimer la collection « '+c.name+' » ? Les tenues seront conservées.'))return;db.capsules=db.capsules.filter(x=>x.id!==id);db.looks.forEach(p=>{if(p.capsuleId===id)p.capsuleId=''});if(save()){renderAdminCapsules();renderHome()}}
- else if(a==='admin-remove-month'){db.monthEnabled=false;db.monthLookId=null;db.monthTitle='';db.monthDescription='';if(save()){renderAdminCapsules();renderHome();toast('Look du mois retiré')}}
- else if(a==='admin-delete-order'){const o=db.orders.find(x=>String(x.id)===String(id));if(!o||!confirm('Supprimer définitivement '+o.id+' sur cet appareil ?'))return;db.orders=db.orders.filter(x=>String(x.id)!==String(id));if(save()){updateAdminOrders();toast('Commande supprimée')}}
+ else if(a==='admin-delete-order'){
+  const o=db.orders.find(x=>String(x.id)===String(id));
+  if(!o||!confirm('Supprimer définitivement '+o.id+' sur cet appareil ?'))return;
+  db.orders=db.orders.filter(x=>String(x.id)!==String(id));
+  if(save()){updateAdminOrders();toast('Commande supprimée')}
+ }
  else if(a==='admin-export')exportBackup();
  else if(a==='admin-logout')logoutFounder()
 }
@@ -230,15 +207,9 @@ function handleAdminSubmit(id,form){
  if(!founderUnlocked)return;
  if(id==='admin-editor-form')saveLookEditor(form);
  else if(id==='admin-photo-form')savePhotoEditor(form);
- else if(id==='admin-capsule-form')saveCapsule(form);
- else if(id==='admin-month-form'){
-  const fd=new FormData(form);const lookId=String(fd.get('lookId')||'');
-  if(!db.looks.some(p=>String(p.id)===lookId&&p.visible!==false)){toast('Choisis une tenue visible.');return}
-  db.monthLookId=lookId;db.monthEnabled=true;db.monthTitle=String(fd.get('title')||'').trim();db.monthDescription=String(fd.get('description')||'').trim();
-  if(save()){renderAdminCapsules();renderHome();toast('Look du mois en vitrine ♡')}
- }
  else if(id==='admin-text-form'){
-  const fd=new FormData(form);db.intro=String(fd.get('intro')||'');db.bio=String(fd.get('bio')||'');db.heroImage=String(fd.get('heroImage')||'');
+  const fd=new FormData(form);
+  db.intro=String(fd.get('intro')||'');db.bio=String(fd.get('bio')||'');db.heroImage=String(fd.get('heroImage')||'');
   if(save()){renderHome();renderAbout();toast('Présentation mise à jour ♡')}
  }
  else if(id==='admin-settings-form'){
