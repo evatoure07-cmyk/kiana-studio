@@ -157,13 +157,19 @@ function cartAdjust(id,delta){
  if(entry.qty<=0)cart=cart.filter(x=>x!==entry);
  persistCart();renderCart()
 }
+function cartSetQty(id,value){
+ const entry=cart.find(x=>x.id===String(id));if(!entry)return;
+ const amount=Number(value);
+ entry.qty=Number.isFinite(amount)?Math.max(1,Math.min(99,Math.floor(amount))):1;
+ persistCart();renderCart()
+}
 function renderCart(){
  const items=cart.map(entry=>({entry,p:cartProduct(entry.id)})).filter(x=>x.p);
  const total=items.reduce((sum,x)=>sum+x.p.price*x.entry.qty,0);
  const n=items.reduce((sum,x)=>sum+x.entry.qty,0);
  byId('cart-items').innerHTML=items.length?items.map(({entry,p})=>
  '<article class="cart-row"><div class="cart-thumbnail">'+safeImg(p.image,p.name)+'</div><div class="cart-row-info"><strong>'+escapeHtml(p.name)+'</strong><p class="muted">'+price(p.price)+' / tenue</p><button class="cart-remove" data-action="cart-remove" data-id="'+escapeHtml(p.id)+'">Retirer</button></div>'+
- '<div class="cart-qty"><button aria-label="Diminuer" data-action="cart-dec" data-id="'+escapeHtml(p.id)+'">−</button><span>'+entry.qty+'</span><button aria-label="Augmenter" data-action="cart-inc" data-id="'+escapeHtml(p.id)+'">+</button></div>'+
+ '<div class="cart-qty"><button aria-label="Diminuer" data-action="cart-dec" data-id="'+escapeHtml(p.id)+'">−</button><input class="cart-qty-value" type="number" min="1" max="99" inputmode="numeric" value="'+entry.qty+'" data-cart-input="'+escapeHtml(p.id)+'" aria-label="Quantité pour '+escapeHtml(p.name)+'"><button aria-label="Augmenter" data-action="cart-inc" data-id="'+escapeHtml(p.id)+'">+</button></div>'+
  '<strong class="price">'+price(p.price*entry.qty)+'</strong></article>').join(''):
  '<div class="panel cart-empty"><h3 class="serif" style="font-size:2.2rem">Ton panier est vide ♡</h3><p class="muted">Ajoute une ou plusieurs tenues depuis la boutique.</p><a href="#shop" class="btn btn-primary">VOIR LES TENUES ↗</a></div>';
  byId('cart-totals').innerHTML='<div class="cart-total-line"><span>'+n+' tenue'+(n>1?'s':'')+'</span><strong>'+price(total)+'</strong></div>'+
@@ -335,6 +341,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{
  const node=e.target;
  if(node.id==='shop-sort'){chosenSort=node.value;renderShop()}
+ if(node.dataset.cartInput)cartSetQty(node.dataset.cartInput,node.value)
  if(node.id==='order-service'){const isOther=node.value==='Autre (à préciser)';byId('order-other-wrap').hidden=!isOther;byId('order-other').required=isOther}
  if(node.dataset.adminChange)handleAdminChange(node)
 });
