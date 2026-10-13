@@ -49,6 +49,7 @@ function renderAdmin(){
   '<button class="quick" data-action="admin-tab" data-id="presentation"><strong>✎ Présentation ↗</strong><small>Textes et image d’accueil</small></button></div>'+
   '<div class="notice" style="margin-top:20px">Démo locale : les commandes d’autres clients n’apparaissent pas ici et tes éditions ne se publient pas sur leurs appareils. La connexion Supabase sécurisée reste à réaliser.</div>';
  } else if(adminTab==='looks')renderAdminLooks();
+ else if(adminTab==='portfolio')renderAdminPortfolio();
  else if(adminTab==='capsules')renderAdminCapsules();
  else if(adminTab==='orders')renderAdminOrders();
  else if(adminTab==='presentation')renderAdminPresentation();
@@ -188,6 +189,9 @@ function handleAdminAction(a,node){
  const id=node.dataset.id;
  if(a==='admin-tab'){adminTab=id;adminSearch='';renderAdmin()}
  else if(a==='admin-new-look')newLook();
+ else if(a==='admin-new-photo')newPhoto();
+ else if(a==='admin-edit-photo')openPhotoEditor(Number(id));
+ else if(a==='admin-delete-photo')deletePhoto();
  else if(a==='admin-edit-look')openLookEditor(id);
  else if(a==='admin-heart'){const p=db.looks.find(x=>String(x.id)===String(id));if(!p)return;p.likedByFounder=!p.likedByFounder;if(save()){updateAdminGallery();renderHome();toast(p.likedByFounder?'Ajouté aux coups de cœur ♡':'Retiré des coups de cœur')}}
  else if(a==='admin-duplicate-look')duplicateLook();
@@ -225,6 +229,7 @@ function handleAdminSubmit(id,form){
  if(id==='pin-form'){submitPin();return}
  if(!founderUnlocked)return;
  if(id==='admin-editor-form')saveLookEditor(form);
+ else if(id==='admin-photo-form')savePhotoEditor(form);
  else if(id==='admin-capsule-form')saveCapsule(form);
  else if(id==='admin-month-form'){
   const fd=new FormData(form);const lookId=String(fd.get('lookId')||'');
@@ -247,6 +252,45 @@ function exportBackup(){
  const link=document.createElement('a');link.href=url;link.download='kiana-studio-sauvegarde.json';link.click();
  setTimeout(()=>URL.revokeObjectURL(url),500)
 }
+
+/* Lookbook management, visually separate from the shop. */
+let photoEditorIndex=null;
+function renderAdminPortfolio(){
+ const root=byId('admin-body');
+ root.innerHTML=adminHeader('Le lookbook','Les photos de ton univers, séparées des looks à vendre.',
+ '<button class="btn btn-primary btn-small" data-action="admin-new-photo">+ PHOTO</button>')+
+ '<div class="admin-gallery">'+db.photos.map((p,i)=>'<div class="admin-look"><button class="admin-look-photo" data-action="admin-edit-photo" data-id="'+i+'" aria-label="Éditer la photo '+escapeHtml(p.title)+'">'+safeImg(p.image,p.title)+'</button><div class="admin-look-info"><strong>'+escapeHtml(p.title)+'</strong><small>Photo #'+(i+1)+'</small></div></div>').join('')+'</div>'+
+ (!db.photos.length?'<div class="panel">Le lookbook est vide. Ajoute ta première photo ♡</div>':'')
+}
+function newPhoto(){
+ db.photos.push({title:'Nouveau Polaroid',image:''});
+ photoEditorIndex=db.photos.length-1;
+ if(save()){renderAdminPortfolio();openPhotoEditor(photoEditorIndex)}
+}
+function openPhotoEditor(index){
+ const p=db.photos[index];if(!p)return;
+ photoEditorIndex=index;editorImage=p.image||'';
+ openModal('<div class="detail-grid"><div><div class="detail-photo" id="editor-photo-preview">'+safeImg(editorImage,p.title)+'</div><p class="help">Photo enregistrée uniquement sur cet appareil.</p></div>'+
+ '<div><span class="eyebrow">FASHION DIARY</span><h2 class="serif" style="font-size:2.2rem">Éditer un Polaroid</h2>'+
+ '<form class="admin-form" id="admin-photo-form">'+
+ '<label>Titre de la photo</label><input class="field" maxlength="100" required name="title" value="'+escapeHtml(p.title)+'">'+
+ '<label>Adresse de la photo</label><input class="field" name="image" id="editor-url" data-admin-input="image-preview" value="'+escapeHtml(imageUrl(p.image))+'">'+
+ '<label>Ou charger une image</label><input class="field" type="file" accept="image/*" data-admin-change="image-file">'+
+ '<div class="admin-actions"><button type="submit" class="btn btn-primary">ENREGISTRER</button><button type="button" class="btn btn-danger" data-action="admin-delete-photo">SUPPRIMER</button></div></form></div></div>')
+}
+function savePhotoEditor(form){
+ const p=db.photos[photoEditorIndex];if(!p)return;
+ const name=String(new FormData(form).get('title')||'').trim();if(!name){toast('Donne un titre à la photo.');return}
+ p.title=name;p.image=editorImage;
+ if(save()){closeModal();renderAdminPortfolio();renderPortfolio();renderHome();toast('Lookbook actualisé ♡')}
+}
+function deletePhoto(){
+ const p=db.photos[photoEditorIndex];if(!p)return;
+ if(!confirm('Supprimer « '+p.title+' » de ce navigateur ?'))return;
+ db.photos.splice(photoEditorIndex,1);
+ if(save()){closeModal();renderAdminPortfolio();renderPortfolio();renderHome();toast('Photo supprimée')}
+}
+
 function init(){
  const date=byId('booking-date');if(date)date.min=new Date().toISOString().slice(0,10);
  showRoute()
