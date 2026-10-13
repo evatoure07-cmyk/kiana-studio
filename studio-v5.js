@@ -1,9 +1,9 @@
 
-/* KIANA STUDIO V5 — local RP demonstration; no cross-device synchronization */
+/* KIANA STUDIO V5 — local  demonstration; no cross-device synchronization */
 const v5DefaultSeasons=[
  {id:"pink-friday",name:"Pink Friday",category:"Baddie",description:"Rose, audace et énergie baddie.",image:IMAGES[0],active:true},
  {id:"midnight-glam",name:"Midnight Glam",category:"Glam",description:"Des tenues glamour pour briller de nuit.",image:IMAGES[1],active:true},
- {id:"baddie-essentials",name:"Baddie Essentials",category:"Y2K",description:"Les indispensables de ton dressing RP.",image:IMAGES[2],active:true}
+ {id:"baddie-essentials",name:"Baddie Essentials",category:"Y2K",description:"Les indispensables de ton dressing .",image:IMAGES[2],active:true}
 ];
 function v5Init(){
  if(!Array.isArray(db.seasons))db.seasons=structuredClone(v5DefaultSeasons);
@@ -52,7 +52,7 @@ function v5ShowFitting(){
  const p=db.looks.find(x=>x.id===v5Fitting?.id);if(!p)return;
  const colors=v5Options(p.colors,['Rose','Violet','Noir']),sizes=v5Options(p.sizes,['XS','S','M','L','XL']);
  const extras=v5Extras.map(x=>'<label class="outfit-extra"><input type="checkbox" '+(v5Fitting.extras.includes(x.id)?'checked':'')+' onchange="v5ToggleExtra(\''+x.id+'\')"><span>'+esc(x.label)+'</span><b>+'+money(x.price)+'</b></label>').join('');
- showModal('<div class="outfit-grid"><div class="outfit-photo">'+(img(p.image)?'<img src="'+esc(img(p.image))+'" alt="'+esc(p.name)+'">':'<div style="padding:30px">KIANA LOOK ♡</div>')+'</div><div class="outfit-config"><span class="eyebrow">THE KIANA FITTING ROOM</span><h2>'+esc(p.name)+'</h2><p>'+esc(p.desc)+'</p><div class="outfit-sub">Composition de la tenue</div><div class="outfit-pieces">'+v5Pieces(p).map(x=>'<span class="outfit-piece">✦ '+esc(x)+'</span>').join('')+'</div><div class="outfit-sub">Couleur RP</div><div class="outfit-choices">'+v5Choice(colors,'color')+'</div><div class="outfit-sub">Taille RP</div><div class="outfit-choices">'+v5Choice(sizes,'size')+'</div><div class="outfit-sub">Options à ajouter</div>'+extras+'<div class="outfit-end"><strong>'+money(v5Total(p))+'</strong><button class="btn hot" onclick="v5AddCustomized()">AJOUTER AU PANIER ♡</button></div><p class="hint">Choix et tarifs RP fictifs. Les variantes sont des indications pour le stylisme, pas un essayage 3D.</p></div></div>');
+ showModal('<div class="outfit-grid"><div class="outfit-photo">'+(img(p.image)?'<img src="'+esc(img(p.image))+'" alt="'+esc(p.name)+'">':'<div style="padding:30px">KIANA LOOK ♡</div>')+'</div><div class="outfit-config"><span class="eyebrow">THE KIANA FITTING ROOM</span><h2>'+esc(p.name)+'</h2><p>'+esc(p.desc)+'</p><div class="outfit-sub">Composition de la tenue</div><div class="outfit-pieces">'+v5Pieces(p).map(x=>'<span class="outfit-piece">✦ '+esc(x)+'</span>').join('')+'</div><div class="outfit-sub">Couleur </div><div class="outfit-choices">'+v5Choice(colors,'color')+'</div><div class="outfit-sub">Taille </div><div class="outfit-choices">'+v5Choice(sizes,'size')+'</div><div class="outfit-sub">Options à ajouter</div>'+extras+'<div class="outfit-end"><strong>'+money(v5Total(p))+'</strong><button class="btn hot" onclick="v5AddCustomized()">AJOUTER AU PANIER ♡</button></div><p class="hint">Choix et tarifs fictifs. Les variantes sont des indications pour le stylisme, pas un essayage 3D.</p></div></div>');
 }
 function v5AddCustomized(){
  const p=db.looks.find(x=>x.id===v5Fitting?.id);if(!p)return;
@@ -65,13 +65,13 @@ showCart=function(){v5Cart()};
 function v5Cart(){
  const total=bag.reduce((sum,x)=>sum+x.price*x.qty,0);
  showModal('<span class="eyebrow">YOUR FASHION BAG</span><h2>Le panier ♡</h2>'+
- (bag.length?bag.map(x=>'<div class="checkrow"><div><b>'+esc(x.name)+'</b><br><small>'+esc(x.variants||'')+'</small><br>'+money(x.price)+'</div><div><button class="smallbtn" onclick="changeQty('+Number(x.id)+',-1)">−</button>'+x.qty+'<button class="smallbtn" onclick="changeQty('+Number(x.id)+',1)">+</button></div></div>').join('')+'<h3>TOTAL : '+money(total)+'</h3><label>Nom de personnage RP</label><input class="field" id="orderName" maxlength="70" placeholder="Prénom Nom"><label>Contact RP</label><input class="field" id="orderContact" maxlength="120" placeholder="Discord ou téléphone IG"><button class="btn hot" style="margin-top:20px" onclick="checkout()">VALIDER MA COMMANDE RP</button><p class="hint">Commande fictive. Le suivi reste sur ce navigateur, sans réception automatique par Kiana.</p>':'<p>Ton panier est vide. Découvre les collections pour choisir ton look ♡</p>'))
+ (bag.length?bag.map(x=>'<div class="checkrow"><div><b>'+esc(x.name)+'</b><br><small>'+esc(x.variants||'')+'</small><br>'+money(x.price)+'</div><div><button class="smallbtn" onclick="changeQty('+Number(x.id)+',-1)">−</button>'+x.qty+'<button class="smallbtn" onclick="changeQty('+Number(x.id)+',1)">+</button></div></div>').join('')+'<h3>TOTAL : '+money(total)+'</h3><label>Nom de personnage </label><input class="field" id="orderName" maxlength="70" placeholder="Prénom Nom"><label>Contact </label><input class="field" id="orderContact" maxlength="120" placeholder="Discord ou téléphone IG"><button class="btn hot" style="margin-top:20px" onclick="checkout()">VALIDER MA COMMANDE </button><p class="hint">Commande fictive. Le suivi reste sur ce navigateur, sans réception automatique par Kiana.</p>':'<p>Ton panier est vide. Découvre les collections pour choisir ton look ♡</p>'))
 }
 changeQty=function(id,delta){let x=bag.find(x=>x.id===id);if(!x)return;x.qty+=delta;if(x.qty<=0)bag=bag.filter(x=>x.id!==id);drawBadge();v5Cart()};
 const v5BeforeCheckout=checkout;
 checkout=function(){
  const name=document.getElementById('orderName')?.value.trim(),contact=document.getElementById('orderContact')?.value.trim();
- if(!name||!contact){studioToast('Ajoute ton nom et ton contact RP.');return}
+ if(!name||!contact){studioToast('Ajoute ton nom et ton contact .');return}
  const variants=bag.map(x=>({...x}));v5BeforeCheckout();
  if(!lastReceipt)return;
  lastReceipt.items=variants;lastReceipt.createdAt=new Date().toISOString();lastReceipt.status='En préparation';
@@ -80,7 +80,7 @@ checkout=function(){
 };
 receiptText=function(){
  if(!lastReceipt)return'';
- return 'KIANA STUDIO — REÇU RP\n'+lastReceipt.id+'\nClient : '+lastReceipt.name+'\nContact RP : '+lastReceipt.contact+'\n'+lastReceipt.items.map(x=>x.name+' x'+x.qty+' — '+money(x.price*x.qty)+(x.variants?'\n'+x.variants:'')).join('\n')+'\nTOTAL : '+money(lastReceipt.total)+'\nStatut : En préparation';
+ return 'KIANA STUDIO — REÇU \n'+lastReceipt.id+'\nClient : '+lastReceipt.name+'\nContact  : '+lastReceipt.contact+'\n'+lastReceipt.items.map(x=>x.name+' x'+x.qty+' — '+money(x.price*x.qty)+(x.variants?'\n'+x.variants:'')).join('\n')+'\nTOTAL : '+money(lastReceipt.total)+'\nStatut : En préparation';
 };
 const v5BeforeReceipt=renderReceipt;
 renderReceipt=function(){
@@ -94,7 +94,7 @@ renderReceipt=function(){
 function v5Track(){
  const code=document.getElementById('trackNumber').value.trim().toUpperCase();
  const contact=document.getElementById('trackContact').value.trim().toLowerCase();
- const target=document.getElementById('trackResult');if(!code||!contact){target.innerHTML='<p>Indique ton numéro et ton contact RP.</p>';return}
+ const target=document.getElementById('trackResult');if(!code||!contact){target.innerHTML='<p>Indique ton numéro et ton contact .</p>';return}
  const order=db.orders.find(o=>o.id.toUpperCase()===code&&String(o.contact).trim().toLowerCase()===contact);
  if(!order){target.innerHTML='<div class="track-result">Commande introuvable sur cet appareil. Le suivi partagé entre joueurs arrivera après la connexion à Supabase.</div>';return}
  const delivered=order.status==='Livrée';
@@ -122,7 +122,7 @@ function v5SaveSeason(i){
  const s=db.seasons[i];s.name=document.getElementById('v5SN'+i).value.trim()||s.name;s.category=document.getElementById('v5SC'+i).value;s.description=document.getElementById('v5SD'+i).value;s.image=document.getElementById('v5SI'+i).value;s.active=document.getElementById('v5SA'+i).checked;if(save()){v5FounderSeasons();studioToast('Collection sauvegardée ♡')}
 }
 function v5FounderOrders(){
- let html=studioAdminHeader('Commandes RP','Deux statuts à gérer pour la démo : En préparation et Livrée.');
+ let html=studioAdminHeader('Commandes ','Deux statuts à gérer pour la démo : En préparation et Livrée.');
  html+='<div class="demo-notice">Ces commandes sont visibles seulement dans ce navigateur. Une commande passée par un autre joueur sur son PC n’apparaîtra pas ici avant la connexion à une base partagée.</div>';
  if(!db.orders.length)html+='<div class="founder-order"><h3>Aucune commande locale</h3><p>Teste une commande depuis la boutique sur ce même appareil pour l’afficher ici.</p><button class="btn hot" onclick="navigate(\'shop\')">TESTER LA BOUTIQUE ↗</button></div>';
  else html+=db.orders.map((o,i)=>'<article class="founder-order"><div class="founder-order-top"><div><strong>'+esc(o.id)+'</strong><p class="hint">'+esc(o.name)+' · '+esc(o.contact)+'</p></div><span class="eyebrow">'+money(o.total)+'</span></div><p class="hint">'+o.items.map(x=>esc(x.name)+' ×'+Number(x.qty)+(x.variants?' ('+esc(x.variants)+')':'')).join('<br>')+'</p><div class="founder-order-actions"><select id="v5Order'+i+'"><option '+(o.status==='En préparation'?'selected':'')+'>En préparation</option><option '+(o.status==='Livrée'?'selected':'')+'>Livrée</option></select><button class="btn hot" onclick="v5SaveOrder('+i+')">ENREGISTRER STATUT</button></div></article>').join('');
