@@ -56,7 +56,7 @@ function initialState(){
  if(!Array.isArray(db.looks))db.looks=structuredClone(DEFAULT_LOOKS);
  if(!Array.isArray(db.orders))db.orders=[];
  if(!Array.isArray(db.appointments))db.appointments=[];
- if(!Array.isArray(db.capsules))db.capsules=Array.isArray(db.seasons)?db.seasons.map(s=>({id:String(s.id||uid()),name:s.name,category:s.category||'Baddie',description:s.description,image:s.image,visible:s.active!==false})):structuredClone(DEFAULT_CAPSULES);
+ if(!Array.isArray(old.capsules))db.capsules=Array.isArray(db.seasons)?db.seasons.map(s=>({id:String(s.id||uid()),name:s.name,category:s.category||'Baddie',description:s.description,image:s.image,visible:s.active!==false})):structuredClone(DEFAULT_CAPSULES);
  db.looks=db.looks.map((p,i)=>({...p,id:p.id||uid(),desc:p.desc||'',price:Number(p.price)||0,visible:p.visible!==false,likedByFounder:!!(p.likedByFounder??p.featured),capsuleId:p.capsuleId||(db.capsules.find(x=>x.category===p.category)?.id||'')}));
  db.capsules=db.capsules.map(c=>({...c,id:String(c.id||uid()),visible:c.visible!==false}));
  if(db.monthEnabled===undefined)db.monthEnabled=true;
@@ -64,7 +64,7 @@ function initialState(){
  return db
 }
 let db=initialState(),founderUnlocked=false,adminTab='overview',selectedProduct=null,source='custom',mode='free',colorSelected=null,colorConfirmed=null,lastReceipt=null,chosenFilter='all',chosenSort='featured',chosenCapsule='all',adminFilter='all',adminSearch='',editorImage=null,editorId=null,bookingMessage='',loginAttempts=0;
-let customerFavs=new Set(readStorage(FAV_KEY)||[]);
+let customerFavs=new Set(Array.isArray(readStorage(FAV_KEY))?readStorage(FAV_KEY):[]);
 function save(){
  try{localStorage.setItem(STORE,JSON.stringify(db));return true}
  catch{toast('Stockage saturé : fais une sauvegarde JSON ou réduis les photos.');return false}
@@ -139,7 +139,7 @@ function openOrder(id){
  const p=db.looks.find(x=>String(x.id)===String(id)&&x.visible!==false);
  selectedProduct=p?String(p.id):null;source=p?'catalog':'custom';
  colorSelected=null;colorConfirmed=null;mode='free';
- closeModal();location.hash='commission';showRoute()
+ closeModal();nav('commission')
 }
 function renderCommission(){
  const published=db.looks.filter(p=>p.visible!==false);
@@ -285,7 +285,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{
  const node=e.target;
  if(node.id==='shop-sort'){chosenSort=node.value;renderShop()}
- if(node.id==='source-look'){selectedProduct=node.value;renderCommissionPrice()}
+ if(node.id==='source-select'){selectedProduct=node.value;renderCommissionPrice()}
  if(node.id==='order-service'){const isOther=node.value==='Autre (à préciser)';byId('order-other-wrap').hidden=!isOther;byId('order-other').required=isOther}
  if(node.dataset.adminChange)handleAdminChange(node)
 });
