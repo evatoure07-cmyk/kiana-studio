@@ -6,8 +6,6 @@ const v6Services=[
 'Création de tenue sur mesure',
 'Customisation d’une tenue existante',
 'Tenue de soirée / événement',
-'Relooking / conseil en style',
-'Tenue professionnelle',
 'Autre (à préciser)'
 ];
 const v6Accessories=[
@@ -24,10 +22,10 @@ function v6Fields(prefix,defaultService){
     '<label><input type="radio" name="'+n+'" value="Non" checked> Non</label></div></div>';
  }).join('');
  return '<div class="commission-fields">'+
- '<section class="commission-section"><span class="commission-step">ÉTAPE 01 / IDENTITÉ RP</span><h3>Pour qui est la commande ?</h3>'+
- '<div class="twocol"><div><label for="'+v6Id(p,'name')+'">Nom et prénom RP *</label><input class="field" id="'+v6Id(p,'name')+'" maxlength="70" autocomplete="name" placeholder="Prénom Nom" required></div>'+
- '<div><label for="'+v6Id(p,'phone')+'">Numéro de téléphone RP *</label><input class="field" type="tel" id="'+v6Id(p,'phone')+'" maxlength="24" inputmode="tel" autocomplete="tel" placeholder="Ex. 555-0123" required></div></div>'+
- '<p class="commission-intro">Garde ce numéro : il servira avec ton code COMMANDE-01, COMMANDE-02… pour retrouver le suivi RP.</p></section>'+
+ '<section class="commission-section"><span class="commission-step">ÉTAPE 01 / IDENTITÉ </span><h3>Pour qui est la commande ?</h3>'+
+ '<div class="twocol"><div><label for="'+v6Id(p,'name')+'">Nom et prénom  *</label><input class="field" id="'+v6Id(p,'name')+'" maxlength="70" autocomplete="name" placeholder="Prénom Nom" required></div>'+
+ '<div><label for="'+v6Id(p,'phone')+'">Numéro de téléphone  *</label><input class="field" type="tel" id="'+v6Id(p,'phone')+'" maxlength="24" inputmode="tel" autocomplete="tel" placeholder="Ex. 555-0123" required></div></div>'+
+ '<p class="commission-intro">Garde ce numéro : il servira avec ton code COMMANDE-01, COMMANDE-02… pour retrouver le suivi .</p></section>'+
  '<section class="commission-section"><span class="commission-step">ÉTAPE 02 / PRESTATION</span><h3>De quel service as-tu besoin ?</h3>'+
  '<label for="'+v6Id(p,'service')+'">Service souhaité *</label><select class="field" id="'+v6Id(p,'service')+'" onchange="v6ServiceChange(\''+p+'\')">'+
  v6Services.map(s=>'<option '+(s===service?'selected':'')+'>'+esc(s)+'</option>').join('')+'</select>'+
@@ -62,8 +60,8 @@ function v6PhoneNumber(v){return String(v||'').replace(/\D/g,'')}
 function v6Read(prefix){
  const read=k=>document.getElementById(v6Id(prefix,k))?.value.trim()||'';
  const name=read('name'),phone=read('phone');
- if(name.length<2){studioToast('Renseigne ton nom RP.');document.getElementById(v6Id(prefix,'name'))?.focus();return null}
- if(!/^\+?[\d\s().-]+$/.test(phone)||v6PhoneNumber(phone).length<5||v6PhoneNumber(phone).length>18){studioToast('Indique un numéro de téléphone RP valide.');document.getElementById(v6Id(prefix,'phone'))?.focus();return null}
+ if(name.length<2){studioToast('Renseigne ton nom .');document.getElementById(v6Id(prefix,'name'))?.focus();return null}
+ if(!/^\+?[\d\s().-]+$/.test(phone)||v6PhoneNumber(phone).length<5||v6PhoneNumber(phone).length>18){studioToast('Indique un numéro de téléphone  valide.');document.getElementById(v6Id(prefix,'phone'))?.focus();return null}
  let service=read('service');
  if(service==='Autre (à préciser)'){
   const other=read('other');if(!other){studioToast('Précise le service demandé.');document.getElementById(v6Id(prefix,'other'))?.focus();return null}
@@ -112,7 +110,7 @@ function v6Cart(){
  const summary=bag.map(x=>'<div class="checkrow"><div><strong>'+esc(x.name)+'</strong><br><small>'+esc(x.variants||'')+'</small><br>'+money(x.price)+'</div><div><button class="smallbtn" aria-label="Enlever une unité" onclick="changeQty('+Number(x.id)+',-1)">−</button>'+Number(x.qty)+'<button class="smallbtn" aria-label="Ajouter une unité" onclick="changeQty('+Number(x.id)+',1)">+</button></div></div>').join('');
  showModal('<span class="eyebrow">KIANA SHOPPING BAG</span><h2>Ton panier ♡</h2>'+
  (bag.length?summary+'<h3>Total : '+money(total)+'</h3><p class="commission-intro">Avant de valider, précise le service et tes préférences. Même un look du catalogue peut être demandé en choix libre ou en customisation.</p>'+
- v6Fields('cart','Commande d’un look du catalogue')+'<button class="btn hot form-submit" onclick="checkout()">CRÉER MA COMMANDE RP ↗</button><p class="track-fineprint">Commande fictive enregistrée uniquement sur ce navigateur.</p>':
+ v6Fields('cart','Commande d’un look du catalogue')+'<button class="btn hot form-submit" onclick="checkout()">CRÉER MA COMMANDE  ↗</button><p class="track-fineprint">Commande fictive enregistrée uniquement sur ce navigateur.</p>':
  '<p>Ton panier est vide. Parcours la boutique ou commande une tenue entièrement sur mesure.</p><button class="btn hot" onclick="closeModal();navigate(\'commission\')">CRÉATION SUR MESURE ♡</button>'))
 }
 v5Cart=function(){v6Cart()};
@@ -124,14 +122,14 @@ checkout=function(){
  const lines=bag.map(x=>({...x}));
  v6CreateOrder(info,lines,lines.reduce((a,x)=>a+Number(x.price||0)*Number(x.qty||0),0))
 };
-function v6Price(total){return total==null?'Tarif sur devis RP':money(total)}
+function v6Price(total){return total==null?'Tarif sur devis ':money(total)}
 function v6ReceiptHTML(order){
  const entries=order.items.map(x=>'<div class="receiptline"><span>'+esc(x.name)+' ×'+Number(x.qty||1)+(x.variants?'<small style="display:block">'+esc(x.variants)+'</small>':'')+'</span><span>'+ (order.total==null?'Sur devis':money(x.price*x.qty)) +'</span></div>').join('');
  const options=order.mode==='Customisation'?'<p class="order-receipt-notes"><b>Options demandées</b><br>'+esc(v6AccessoryList(order))+'</p>':'';
  return '<div class="bigreceipt"><h3>KIANA STUDIO ✦</h3><p style="text-align:center">YOUR FASHION RECEIPT ♡</p>'+
- '<div class="receiptline"><b>'+esc(order.id)+'</b><span>FLASHFA RP</span></div>'+
+ '<div class="receiptline"><b>'+esc(order.id)+'</b><span>FLASHFA </span></div>'+
  '<div class="receiptline"><span>'+esc(order.name)+'</span><span>♡</span></div>'+
- '<div class="receiptline"><span>Téléphone RP</span><span>'+esc(order.phone)+'</span></div>'+
+ '<div class="receiptline"><span>Téléphone </span><span>'+esc(order.phone)+'</span></div>'+
  '<div class="receiptline"><span>Prestation</span><span>'+esc(order.service)+'</span></div>'+
  '<div class="receiptline"><span>Formule</span><span>'+esc(order.mode)+'</span></div>'+entries+
  '<div class="receiptline"><b>TOTAL</b><b>'+v6Price(order.total)+'</b></div>'+
@@ -143,11 +141,11 @@ renderReceipt=function(){
  if(!lastReceipt)return;
  const wrap=document.getElementById('receiptRender');wrap.innerHTML=v6ReceiptHTML(lastReceipt)+
  '<div class="actions" style="justify-content:center;margin:34px 0"><button class="btn hot" onclick="clipboard(receiptText())">COPIER MON REÇU</button><button class="btn" onclick="navigate(\'tracking\')">SUIVRE MA COMMANDE</button><button class="btn" onclick="navigate(\'shop\')">CONTINUER LE SHOPPING</button></div>'+
- '<p class="hint" style="text-align:center">Enregistre ton numéro et partage ce reçu avec Kiana dans le jeu RP. Les commandes ne sont pas transmises automatiquement à la fondatrice.</p>';
+ '<p class="hint" style="text-align:center">Enregistre ton numéro et partage ce reçu avec Kiana dans le jeu . Les commandes ne sont pas transmises automatiquement à la fondatrice.</p>';
 };
 receiptText=function(){
  const r=lastReceipt;if(!r)return'';
- return ['KIANA STUDIO — '+r.id,'Client RP : '+r.name,'Téléphone RP : '+r.phone,
+ return ['KIANA STUDIO — '+r.id,'Client  : '+r.name,'Téléphone  : '+r.phone,
  'Prestation : '+r.service,'Formule : '+r.mode, ...(r.mode==='Customisation'?['Customisation : '+v6AccessoryList(r)]:[]),
  ...(r.wants?['Souhaits : '+r.wants]:[]),...(r.avoid?['À éviter : '+r.avoid]:[]),
  ...r.items.map(x=>x.name+' x'+x.qty+' : '+(r.total==null?'Sur devis':money(x.price*x.qty))+(x.variants?' | '+x.variants:'')),
@@ -157,7 +155,7 @@ v5Track=function(){
  const code=document.getElementById('trackNumber').value.trim().toUpperCase();
  const phone=document.getElementById('trackContact').value.trim();
  const dest=document.getElementById('trackResult');
- if(!code||!phone){dest.innerHTML='<div class="track-result">Renseigne ton numéro de téléphone RP et ton numéro de commande.</div>';return}
+ if(!code||!phone){dest.innerHTML='<div class="track-result">Renseigne ton numéro de téléphone  et ton numéro de commande.</div>';return}
  const order=db.orders.find(o=>String(o.id).toUpperCase()===code&&v6PhoneNumber(o.phone||o.contact)===v6PhoneNumber(phone)&&v6PhoneNumber(phone).length>=5);
  if(!order){dest.innerHTML='<div class="track-result"><b>Commande introuvable sur cet appareil.</b><p class="hint">Vérifie le numéro de téléphone et le code de commande. Le suivi partagé entre PC nécessite toujours Supabase.</p></div>';return}
  const done=order.status==='Livrée';
@@ -169,10 +167,10 @@ v5Track=function(){
  '<p><b>Statut actuel :</b> '+esc(order.status)+'</p></div>'
 };
 v5FounderOrders=function(){
- let html=studioAdminHeader('Commandes & créations RP','Gère les commandes en préparation et celles déjà livrées.');
+ let html=studioAdminHeader('Commandes & créations ','Gère les commandes en préparation et celles déjà livrées.');
  html+='<div class="demo-notice">Démo locale : les commandes des autres joueurs ne sont pas reçues ici. Le suivi partagé nécessitera une base Supabase.</div>';
  if(!db.orders.length){html+='<div class="admin-order-card">Aucune commande sur cet appareil. <button class="btn hot" onclick="navigate(\'commission\')">TESTER UNE DEMANDE SUR MESURE</button></div>'}
- else html+=db.orders.map((o,i)=>'<article class="admin-order-card"><div class="admin-order-heading"><div><strong>'+esc(o.id)+'</strong><p class="hint">'+esc(o.name)+' · Téléphone RP : '+esc(o.phone||o.contact||'Non renseigné')+'</p></div><span class="eyebrow">'+v6Price(o.total)+'</span></div>'+
+ else html+=db.orders.map((o,i)=>'<article class="admin-order-card"><div class="admin-order-heading"><div><strong>'+esc(o.id)+'</strong><p class="hint">'+esc(o.name)+' · Téléphone  : '+esc(o.phone||o.contact||'Non renseigné')+'</p></div><span class="eyebrow">'+v6Price(o.total)+'</span></div>'+
  '<div class="order-details"><p><b>Service :</b> '+esc(o.service||'Commande du catalogue')+'</p><p><b>Mode :</b> '+esc(o.mode||'Non précisé')+'</p>'+
  (o.mode==='Customisation'?'<p><b>Personnalisation :</b> '+esc(v6AccessoryList(o))+'</p>':'')+
  (o.wants?'<p><b>Ce que le client veut :</b> '+esc(o.wants)+'</p>':'')+
