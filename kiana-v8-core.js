@@ -230,7 +230,7 @@ function renderCommission(){
  byId('order-other-wrap').hidden=true;byId('order-other').required=false;
  byId('order-summary-name').textContent='Création sur mesure';
  byId('order-summary-price').textContent='Tarif à définir';
- byId('order-summary-info').textContent='Envoie tes préférences et ta couleur : Kiana prépare ta tenue à distance, sans rendez-vous.';
+ byId('order-summary-info').textContent='Envoie tes préférences et tes couleurs : Kiana prépare ta tenue à distance, sans rendez-vous.';
 }
 function chosenColorNames(){
  return colorSelected.map(i=>COLOR_LIST[i]?.[0]).filter(Boolean);
@@ -302,7 +302,7 @@ function orderAmount(o){
 function orderSummaryText(o){
  const lines=['KIANA STUDIO · '+o.id,'Client : '+o.name,'Téléphone : '+o.phone,'Service : '+(o.service||'Commande'),
  ...orderItems(o).map(x=>x.qty+' × '+x.name+' — '+price(Number(x.price)*Number(x.qty))),
- ...(!orderItems(o).length?['Création : '+(o.lookName||'Sur mesure'),'Mode : '+o.mode,'Couleur : '+(o.color||'À définir'),'Options : '+orderOptionsText(o)]:[]),
+ ...(!orderItems(o).length?['Création : '+(o.lookName||'Sur mesure'),'Mode : '+o.mode,'Couleurs : '+(o.color||'À définir'),'Options : '+orderOptionsText(o)]:[]),
  ...(o.wants?['Précisions : '+o.wants]:[]),...(o.avoid?['À éviter : '+o.avoid]:[]),
  'Total : '+price(orderAmount(o)),'Statut : '+o.status,'À transmettre à Kiana pour confirmer la commande.'];
  return lines.join('\n')
@@ -312,7 +312,7 @@ function renderReceipt(){
  if(!o){byId('receipt-area').innerHTML='<div class="panel">Aucun reçu en cours.</div>';return}
  const items=orderItems(o);
  const lines=items.length?items.map(x=>receiptRow(Number(x.qty)+' × '+x.name,price(Number(x.price)*Number(x.qty)))).join(''):
- receiptRow('Création',o.lookName||'Sur mesure')+receiptRow('Formule',o.mode||'Choix libre')+receiptRow('Couleur',o.color||'À définir');
+ receiptRow('Création',o.lookName||'Sur mesure')+receiptRow('Formule',o.mode||'Choix libre')+receiptRow('Couleurs',o.color||'À définir');
  byId('receipt-area').innerHTML='<div class="receipt-wrap"><div class="receipt"><h2>KIANA STUDIO ✦</h2><p>FASHION ORDER · MERCI ♡</p>'+
  receiptRow('Commande',o.id)+receiptRow('Nom',o.name)+receiptRow('Téléphone',o.phone)+receiptRow('Service',o.service||'Commande boutique')+
  lines+receiptRow('TOTAL',price(orderAmount(o)))+
