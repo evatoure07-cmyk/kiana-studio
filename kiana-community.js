@@ -179,11 +179,13 @@ document.addEventListener('click',e=>{
 });
 const {data:initial}=await dbClient.auth.getUser();member=initial?.user||null;
 if(member)await ensureProfile('Membre KIANA');
-dbClient.auth.onAuthStateChange(async(event,session)=>{
+dbClient.auth.onAuthStateChange((event,session)=>{
  member=session?.user||null;
- if(event==='SIGNED_OUT'){profile=null}
- renderAuth();
- if(location.hash==='#community')await loadFeed();
- if(location.hash==='#account')await renderOwnPosts();
+ if(event==='SIGNED_OUT')profile=null;
+ setTimeout(()=>{
+  renderAuth();
+  if(location.hash==='#community')void loadFeed();
+  if(location.hash==='#account')void renderOwnPosts();
+ },0);
 });
-renderAuth();if(location.hash==='#community')await loadFeed();if(location.hash==='#account')await renderOwnPosts();
+renderAuth();if(location.hash==='#community')await loadFeed();if(location.hash==='#account')await renderOwnPosts();if(location.hash==='#founder'&&document.querySelector('[data-admin-tab="community"].active'))await renderModeration();
