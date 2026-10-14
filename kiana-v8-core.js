@@ -64,7 +64,7 @@ function initialState(){
  db.orderSequence=Number(db.orderSequence)||0;
  return db
 }
-let db=initialState(),founderUnlocked=false,adminTab='overview',selectedProduct=null,source='custom',mode='free',colorSelected=null,colorConfirmed=null,lastReceipt=null,chosenFilter='all',chosenSort='featured',chosenCapsule='all',adminFilter='all',adminSearch='',editorImage=null,editorId=null,bookingMessage='',loginAttempts=0;
+let db=initialState(),founderUnlocked=false,adminTab='overview',selectedProduct=null,source='custom',mode='free',colorSelected=[],colorConfirmed=[],lastReceipt=null,chosenFilter='all',chosenSort='featured',chosenCapsule='all',adminFilter='all',adminSearch='',editorImage=null,editorId=null,bookingMessage='',loginAttempts=0;
 let cart=Array.isArray(readStorage(CART_KEY))?readStorage(CART_KEY).filter(x=>x&&x.id!=null).map(x=>({id:String(x.id),qty:Math.min(99,Math.max(1,Number(x.qty)||1))})):[];
 function save(){
  try{localStorage.setItem(STORE,JSON.stringify(db));return true}
@@ -154,7 +154,7 @@ function openLook(id){
  '<button class="btn btn-outline btn-block" style="margin-top:10px" data-action="go-cart">VOIR MON PANIER ↗</button></div></div>')
 }
 function openOrder(){
- colorSelected=null;colorConfirmed=null;mode='free';
+ colorSelected=[];colorConfirmed=[];mode='free';
  closeModal();nav('commission')
 }
 function updateCartCount(){
@@ -224,7 +224,7 @@ function renderCommission(){
  byId('accessory-area').hidden=mode!=='custom';
  byId('accessory-area').innerHTML=ACCESSORIES.map(([id,label])=>
  '<div class="acc"><span>'+label+'</span><div class="yesno"><label><input type="radio" name="acc-'+id+'" value="Oui"><span>Oui</span></label><label><input type="radio" name="acc-'+id+'" value="Non" checked><span>Non</span></label></div></div>').join('');
- byId('color-options').innerHTML=COLOR_LIST.map(([name,hex],i)=>'<button type="button" class="color-swatch '+(colorSelected===i?'selected':'')+'" style="background:'+hex+'" data-action="color" data-id="'+i+'" aria-label="'+name+'" title="'+name+'" aria-pressed="'+(colorSelected===i)+'"></button>').join('');
+ byId('color-options').innerHTML=COLOR_LIST.map(([name,hex],i)=>'<button type="button" class="color-swatch '+(colorSelected.includes(i)?'selected':'')+'" style="background:'+hex+'" data-action="color" data-id="'+i+'" aria-label="'+name+'" title="'+name+'" aria-pressed="'+colorSelected.includes(i)+'"></button>').join('');
  renderColorStatus();
  byId('order-service').innerHTML=SERVICES.map(s=>'<option>'+escapeHtml(s)+'</option>').join('');
  byId('order-other-wrap').hidden=true;byId('order-other').required=false;
@@ -232,18 +232,31 @@ function renderCommission(){
  byId('order-summary-price').textContent='Tarif à définir';
  byId('order-summary-info').textContent='Envoie tes préférences et ta couleur : Kiana prépare ta tenue à distance, sans rendez-vous.';
 }
+function chosenColorNames(){
+ return colorSelected.map(i=>COLOR_LIST[i]?.[0]).filter(Boolean);
+}
+function validatedColorNames(){
+ return colorConfirmed.map(i=>COLOR_LIST[i]?.[0]).filter(Boolean);
+}
+function colorsValidated(){
+ return colorSelected.length>0&&colorSelected.length===colorConfirmed.length&&colorSelected.every(i=>colorConfirmed.includes(i));
+}
 function renderColorStatus(){
  document.querySelectorAll('.color-swatch').forEach(b=>{
- const active=Number(b.dataset.id)===colorSelected;
- b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active))
+  const active=colorSelected.includes(Number(b.dataset.id));
+  b.classList.toggle('selected',active);
+  b.setAttribute('aria-pressed',String(active))
  });
- const name=colorSelected===null?'Aucune couleur choisie':COLOR_LIST[colorSelected][0];
- const verified=colorConfirmed!==null&&colorConfirmed===colorSelected;
- byId('color-status').textContent=(verified?'✓ Validée : ':'Sélection : ')+name;
- byId('color-status').classList.toggle('verified',verified);
- byId('confirm-color').disabled=colorSelected===null||verified;
- byId('confirm-color').textContent=verified?'✓ COULEUR VALIDÉE':'VALIDER LA COULEUR';
+ const names=chosenColorNames(),verified=colorsValidated();
+ const status=byId('color-status');
+ status.textContent=names.length?(verified?'✓ Couleurs validées : ':'Sélection ('+names.length+') : ')+names.join(', '):
+  'Aucune couleur choisie — tu peux en sélectionner plusieurs';
+ status.classList.toggle('verified',verified);
+ const confirm=byId('confirm-color');
+ confirm.disabled=names.length===0||verified;
+ confirm.textContent=verified?'✓ COULEURS VALIDÉES':'VALIDER MES '+(names.length>1?'COULEURS':'COULEUR');
 }
+
 function phoneDigits(v){return String(v||'').replace(/\D/g,'')}
 function validPhone(v){return /^\+?[\d\s().-]+$/.test(v)&&phoneDigits(v).length>=5&&phoneDigits(v).length<=18}
 function nextOrderId(){
@@ -260,17 +273,17 @@ function submitOrder(){
  const name=byId('order-name').value.trim(),phone=byId('order-phone').value.trim(),service=byId('order-service').value;
  if(name.length<2){toast('Indique ton nom.');byId('order-name').focus();return}
  if(!validPhone(phone)){toast('Indique un numéro de téléphone valide.');byId('order-phone').focus();return}
- if(colorConfirmed===null||colorSelected!==colorConfirmed){toast('Choisis et valide une couleur.');byId('color-options').scrollIntoView({block:'center',behavior:'smooth'});return}
+ if(!colorsValidated()){toast('Choisis une ou plusieurs couleurs et valide-les.');byId('color-options').scrollIntoView({block:'center',behavior:'smooth'});return}
  if(service==='Autre (à préciser)'&&!byId('order-other').value.trim()){toast('Précise le service demandé.');return}
  const options={};if(mode==='custom')ACCESSORIES.forEach(([id])=>{options[id]=document.querySelector('input[name="acc-'+id+'"]:checked')?.value||'Non'});
  const [seq,id]=nextOrderId();
  const order={id,kind:'sur-mesure',createdAt:new Date().toISOString(),status:'En préparation',name,phone,
  service:service==='Autre (à préciser)'?'Autre : '+byId('order-other').value.trim():service,
  lookName:'Création sur mesure à distance',items:[],price:null,total:null,
- mode:mode==='custom'?'Customisation':'Choix libre',color:COLOR_LIST[colorConfirmed][0],
+ mode:mode==='custom'?'Customisation':'Choix libre',color:validatedColorNames().join(', '),colors:validatedColorNames(),
  options,wants:byId('order-wants').value.trim(),avoid:byId('order-avoid').value.trim()};
  if(!storeOrder(order,seq))return;
- colorSelected=null;colorConfirmed=null;
+ colorSelected=[];colorConfirmed=[];
  ['order-name','order-phone','order-wants','order-avoid','order-other'].forEach(id=>{if(byId(id))byId(id).value=''});
  nav('receipt');toast('Demande '+id+' préparée ♡')
 }
@@ -322,7 +335,7 @@ function trackOrder(){
  '<div class="timeline"><div class="node active"><b>✂</b>En préparation</div><div class="node '+(o.status==='Livrée'?'active':'')+'"><b>♡</b>Livrée</div></div>'+
  '<p><strong>Statut actuel :</strong> '+escapeHtml(o.status)+'</p>'+
  (orderItems(o).length?'<p class="help">'+orderItems(o).map(x=>escapeHtml(x.qty+' × '+x.name)).join(' · ')+'</p>':
- '<p class="help">Création sur mesure à distance · '+escapeHtml(o.color||'Couleur non précisée')+'</p>')+'</div>'
+ '<p class="help">Création sur mesure à distance · Couleurs : '+escapeHtml(o.color||'Non précisées')+'</p>')+'</div>'
 }
 function renderAbout(){byId('about-bio').textContent=db.bio}
 function submitBooking(){
@@ -353,8 +366,8 @@ function handleCoreAction(a,node){
  else if(a==='cart-remove')cartAdjust(id,0);
  else if(a==='order-custom')openOrder();
  else if(a==='mode'){mode=id==='custom'?'custom':'free';byId('mode-free').classList.toggle('active',mode==='free');byId('mode-custom').classList.toggle('active',mode==='custom');byId('accessory-area').hidden=mode!=='custom'}
- else if(a==='color'){colorSelected=Number(id);colorConfirmed=null;renderColorStatus()}
- else if(a==='confirm-color'){if(colorSelected!==null){colorConfirmed=colorSelected;renderColorStatus();toast(COLOR_LIST[colorSelected][0]+' validée ♡')}}
+ else if(a==='color'){const i=Number(id);if(!Number.isInteger(i)||!COLOR_LIST[i])return;if(colorSelected.includes(i))colorSelected=colorSelected.filter(x=>x!==i);else colorSelected.push(i);colorConfirmed=[];renderColorStatus()}
+ else if(a==='confirm-color'){if(colorSelected.length){colorConfirmed=[...colorSelected];renderColorStatus();toast(colorConfirmed.length+' couleur'+(colorConfirmed.length>1?'s':'')+' validée'+(colorConfirmed.length>1?'s':'')+' ♡')}}
  else if(a==='track-last'){if(lastReceipt){byId('track-id').value=lastReceipt.id;byId('track-phone').value=lastReceipt.phone}nav('tracking');trackOrder()}
  else if(a==='copy-receipt'&&lastReceipt)copyText(orderSummaryText(lastReceipt));
  else if(a==='copy-booking')copyText(bookingMessage);
