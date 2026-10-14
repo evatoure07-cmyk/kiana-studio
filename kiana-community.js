@@ -1,7 +1,7 @@
 
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.76.1/+esm';
 const dbClient=createClient('https://foebmwxururqumoksijb.supabase.co','sb_publishable_4BmRGULwEsoz5dNqQVhiXg_rnF6sEH0',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
-let member=null,profile=null,requestedPhone='',communityPosts=[],likes=new Map(),myLiked=new Set(),pendingImage=null,loading=false;
+let member=null,profile=null,authMode='register',communityPosts=[],likes=new Map(),myLiked=new Set(),pendingImage=null,loading=false;
 const $=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;',"'":'&#39;'}[c]));
 const isMod=()=>!!member?.app_metadata?.kiana_admin;
@@ -10,9 +10,21 @@ const photoPath=(id)=>'https://foebmwxururqumoksijb.supabase.co/storage/v1/objec
 const heart='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.8 4.6c-2.1-2.1-5.4-2.1-7.5 0L12 5.9l-1.3-1.3c-2.1-2.1-5.4-2.1-7.5 0s-2.1 5.4 0 7.5L12 20.9l8.8-8.8c2.1-2.1 2.1-5.4 0-7.5z"/></svg>';
 function navigateMember(){location.hash='account'}
 function submitBusy(active){loading=active;document.querySelectorAll('[data-kiana-submit]').forEach(b=>b.disabled=active)}
-function normalizePhone(value){
- const s=String(value||'').replace(/[\s().-]/g,'');
- return /^\+[1-9]\d{7,14}$/.test(s)?s:null
+function normalizeRpNumber(value){
+ const digits=String(value||'').replace(/[\s\-]/g,'');
+ if(!/^\d{7}$/.test(digits))return null;
+ return digits.slice(0,3)+'-'+digits.slice(3)
+}
+function numberLoginEmail(value){
+ const normalized=normalizeRpNumber(value);
+ return normalized?normalized.replace('-','')+'@kiana-members.example.com':null
+}
+function authError(error,kind){
+ const code=String(error?.code||'');
+ if(code==='user_already_exists'||/already registered|already exists/i.test(error?.message||''))return'Ce numéro possède déjà un compte. Utilise « Connexion ».';
+ if(code==='weak_password')return'Mot de passe trop simple : choisis au moins 8 caractères avec des chiffres et des lettres.';
+ if(code==='email_not_confirmed')return'La confirmation des comptes est encore activée dans Supabase. Kiana doit désactiver « Confirm email » dans les réglages.';
+ return kind==='register'?'Impossible de créer le compte. Vérifie les informations.':'Numéro ou mot de passe incorrect.'
 }
 async function signedImages(posts){
  return Promise.all(posts.map(async p=>{
@@ -44,45 +56,76 @@ async function loadFeed(){
 function renderAuth(){
  const el=$('community-auth');if(!el)return;
  if(member){
- el.innerHTML='<span class="eyebrow">MEMBRE KIANA STUDIO</span><h3 class="account-name">'+esc(profile?.display_name||'Mon espace')+' ♡</h3>'+
- '<p class="muted">Ton numéro vérifié reste privé. Tu peux publier une photo et aimer celles de la communauté.</p>'+
- '<div class="admin-actions"><button class="btn btn-primary" id="community-post-from-account">+ PARTAGER MON OUTFIT</button><button class="btn" id="community-logout">SE DÉCONNECTER</button></div>';
- $('community-logout').onclick=signOut;
- $('community-post-from-account').onclick=openPublish;
+  const first=String(member.user_metadata?.first_name||'').trim();
+  el.innerHTML='<span class="eyebrow">MEMBRE KIANA STUDIO</span><h3 class="account-name">'+esc(profile?.display_name||member.user_metadata?.display_name||'Mon espace')+' ♡</h3>'+
+  '<p class="muted">'+(first?'Bienvenue '+esc(first)+' ! ':'')+'Ton numéro reste privé. Ton pseudo est affiché sous tes photos.</p>'+
+  '<div class="admin-actions"><button class="btn btn-primary" id="community-post-from-account">+ PARTAGER MON OUTFIT</button><button class="btn" id="community-logout">SE DÉCONNECTER</button></div>';
+  $('community-logout').onclick=signOut;
+  $('community-post-from-account').onclick=openPublish;
  }else{
- el.innerHTML='<div><span class="eyebrow">REJOINS LA KIANA FAMILY</span><h3 class="serif" style="font-size:2rem;margin:12px 0">'+(requestedPhone?'Vérifie ton téléphone ♡':'Crée ton compte ♡')+'</h3>'+
- (requestedPhone?
- '<form id="community-otp-form"><p class="muted">Code envoyé au '+esc(requestedPhone)+'.</p><label for="community-otp">Code de vérification SMS</label><input class="field" id="community-otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required placeholder="6 chiffres"><button class="btn btn-primary" data-kiana-submit>VALIDER LE CODE</button><button class="btn" type="button" id="community-new-phone" style="margin-left:8px">CHANGER LE NUMÉRO</button></form>':
- '<form id="community-phone-form"><label for="community-phone">Numéro de téléphone avec indicatif *</label><input class="field" type="tel" id="community-phone" required placeholder="+33 6 12 34 56 78" autocomplete="tel"><label for="community-name">Pseudo public (visible sur les photos) *</label><input class="field" id="community-name" maxlength="40" minlength="2" required placeholder="Ex. Kiana.S"><button class="btn btn-primary" data-kiana-submit>RECEVOIR UN CODE SMS ↗</button></form>')+
- '<p class="auth-alt">Ton téléphone sert à vérifier ton compte. Il n’est pas affiché dans la galerie. Aucun like sans connexion.</p></div>';
- const first=$('community-phone-form');if(first)first.onsubmit=requestCode;
- const second=$('community-otp-form');if(second)second.onsubmit=verifyCode;
- const change=$('community-new-phone');if(change)change.onclick=()=>{requestedPhone='';renderAuth()};
+  const register=authMode==='register';
+  el.innerHTML='<span class="eyebrow">REJOINS LA KIANA FAMILY</span>'+
+  '<h3 class="serif" style="font-size:2rem;margin:12px 0">'+(register?'Crée ton compte ♡':'Bon retour ♡')+'</h3>'+
+  '<div class="community-auth-tabs" role="group" aria-label="Inscription ou connexion">'+
+  '<button class="btn btn-small '+(register?'btn-primary':'')+'" type="button" id="community-register-tab">INSCRIPTION</button>'+
+  '<button class="btn btn-small '+(!register?'btn-primary':'')+'" type="button" id="community-login-tab">CONNEXION</button></div>'+
+  '<form id="community-member-form">'+
+  (register?'<label for="community-first-name">Prénom *</label><input class="field" id="community-first-name" minlength="2" maxlength="40" required autocomplete="given-name" placeholder="Ex. Kiana">'+
+  '<label for="community-name">Pseudo public *</label><input class="field" id="community-name" minlength="2" maxlength="40" required autocomplete="nickname" placeholder="Ex. Kiana.Sterling">':'')+
+  '<label for="community-phone">Numéro *</label><input class="field" id="community-phone" type="tel" inputmode="tel" required maxlength="8" pattern="[0-9]{3}-?[0-9]{4}" placeholder="444-4444" autocomplete="off">'+
+  '<label for="community-password">Mot de passe *</label><input class="field" id="community-password" type="password" minlength="8" maxlength="128" required autocomplete="'+(register?'new-password':'current-password')+'" placeholder="8 caractères minimum">'+
+  (register?'<label for="community-password-repeat">Confirmer le mot de passe *</label><input class="field" id="community-password-repeat" type="password" minlength="8" maxlength="128" required autocomplete="new-password" placeholder="Répète ton mot de passe">':'')+
+  '<button class="btn btn-primary" data-kiana-submit style="width:100%">'+(register?'CRÉER MON COMPTE ↗':'SE CONNECTER ↗')+'</button></form>'+
+  '<p class="auth-alt">Aucun SMS ni e-mail demandé. Exemple de numéro : <b>444-4444</b>. Le numéro est un identifiant de jeu non vérifié ; conserve ton mot de passe car la récupération automatique n’est pas disponible.</p>';
+  $('community-register-tab').onclick=()=>{authMode='register';renderAuth()};
+  $('community-login-tab').onclick=()=>{authMode='login';renderAuth()};
+  $('community-member-form').onsubmit=register?registerMember:loginMember
  }
 }
-async function requestCode(e){
- e.preventDefault();if(loading)return;
- const phone=normalizePhone($('community-phone').value);
+async function registerMember(event){
+ event.preventDefault();if(loading)return;
+ const first=$('community-first-name').value.trim();
  const name=$('community-name').value.trim();
- if(!phone){notice('Entre un vrai numéro international, par exemple +33612345678.');return}
- if(name.length<2||name.length>40){notice('Choisis un pseudo entre 2 et 40 caractères.');return}
- sessionStorage.setItem('kiana-pending-name',name);
+ const number=normalizeRpNumber($('community-phone').value);
+ const password=$('community-password').value;
+ if(!number){notice('Indique un numéro de jeu comme 444-4444.');return}
+ if(first.length<2||first.length>40){notice('Indique ton prénom (2 à 40 caractères).');return}
+ if(name.length<2||name.length>40){notice('Choisis un pseudo de 2 à 40 caractères.');return}
+ if(password.length<8){notice('Ton mot de passe doit contenir au moins 8 caractères.');return}
+ if(password!==$('community-password-repeat').value){notice('Les mots de passe ne correspondent pas.');return}
  submitBusy(true);
- const {error}=await dbClient.auth.signInWithOtp({phone,options:{shouldCreateUser:true}});
- submitBusy(false);
- if(error){notice('SMS non envoyé : vérifie que la connexion téléphone et le fournisseur SMS sont activés dans Supabase.');return}
- requestedPhone=phone;renderAuth();notice('Code de vérification demandé ♡')
+ try{
+  const {data,error}=await dbClient.auth.signUp({
+   email:numberLoginEmail(number),
+   password,
+   options:{data:{first_name:first,display_name:name,kiana_rp_number:number}}
+  });
+  if(error){notice(authError(error,'register'));return}
+  if(!data?.session||!data?.user){
+   notice('Inscription non terminée : Kiana doit désactiver la confirmation e-mail dans Supabase pour permettre les comptes sans code.');
+   return
+  }
+  member=data.user;await ensureProfile(name);
+  renderAuth();await renderOwnPosts();await loadFeed();
+  notice('Bienvenue sur KIANA STUDIO, '+first+' ♡')
+ }catch{notice('Inscription momentanément indisponible.')}
+ finally{submitBusy(false)}
 }
-async function verifyCode(e){
- e.preventDefault();if(loading)return;
+async function loginMember(event){
+ event.preventDefault();if(loading)return;
+ const number=normalizeRpNumber($('community-phone').value);
+ const password=$('community-password').value;
+ if(!number){notice('Entre ton numéro comme 444-4444.');return}
  submitBusy(true);
- const {data,error}=await dbClient.auth.verifyOtp({phone:requestedPhone,token:$('community-otp').value.trim(),type:'sms'});
- submitBusy(false);
- if(error||!data.user){notice('Code incorrect ou expiré.');return}
- member=data.user;requestedPhone='';
- await ensureProfile(sessionStorage.getItem('kiana-pending-name')||'Membre KIANA');
- sessionStorage.removeItem('kiana-pending-name');
- renderAuth();await renderOwnPosts();await loadFeed();notice('Ton compte est connecté ♡')
+ try{
+  const {data,error}=await dbClient.auth.signInWithPassword({email:numberLoginEmail(number),password});
+  if(error||!data?.user){notice(authError(error,'login'));return}
+  member=data.user;
+  await ensureProfile(member.user_metadata?.display_name||'Membre KIANA');
+  renderAuth();await renderOwnPosts();await loadFeed();
+  notice('Connexion réussie ♡')
+ }catch{notice('Connexion momentanément indisponible.')}
+ finally{submitBusy(false)}
 }
 async function ensureProfile(initialName){
  if(!member)return;
