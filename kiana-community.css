@@ -38,3 +38,9 @@
 @keyframes communityHeart{0%{transform:scale(.65) rotate(-18deg)}44%{transform:scale(1.62) rotate(10deg)}68%{transform:scale(.86) rotate(-3deg)}100%{transform:scale(1)}}
 @media(max-width:550px){.community-grid{grid-template-columns:1fr}.community-image{height:350px}}
 @media(prefers-reduced-motion:reduce){.community-like.burst svg{animation:none}}
+
+.community-auth-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:17px 0 24px}
+.community-auth-tabs .btn{flex:1;min-width:125px}
+.community-auth input[type=password]{letter-spacing:.06em}
+.community-auth .auth-alt{border-top:1px solid #b57ba16b;margin-top:22px;padding-top:16px;line-height:1.7}
+@media(max-width:480px){.community-auth-tabs{gap:7px}.community-auth-tabs .btn{min-width:110px}}
