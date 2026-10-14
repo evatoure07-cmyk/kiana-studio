@@ -192,7 +192,7 @@ updateAdminOrders=function(){
   const details=shop?
    '<div class="order-admin-products">'+items.map(i=>'<div class="order-admin-product"><span>'+escapeHtml(i.qty+' × '+i.name)+'</span><b>'+price(i.price*i.qty)+'</b></div>').join('')+'</div>':
    '<p><b>Création sur mesure</b><br>Budget : '+price(o.budget??null)+'<br>Mode : '+escapeHtml(o.mode||'Choix libre')+
-   '<br>Couleur : '+escapeHtml(o.color||'')+'<br>Options : '+escapeHtml(orderOptionsText(o))+'</p>';
+   '<br>Couleurs : '+escapeHtml(o.color||'')+'<br>Options : '+escapeHtml(orderOptionsText(o))+'</p>';
   return '<article class="admin-order"><div class="admin-order-head"><div><strong>'+escapeHtml(o.id)+'</strong><br><small>'+escapeHtml(o.name)+' · '+escapeHtml(o.phone||o.contact||'')+'</small>'+
   (o.expressFee?'<span class="urgent-label">✦ URGENT · +500 $</span>':'')+
   '</div><span class="price">'+kianaReceiptAmount(o)+'</span></div>'+
