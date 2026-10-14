@@ -137,7 +137,7 @@ function updateAdminOrders(){
  '<p><b>Articles commandés :</b></p><div class="order-admin-products">'+items.map(item=>
  '<div class="order-admin-product"><span>'+escapeHtml(item.qty+' × '+item.name)+'</span><strong>'+price(Number(item.price)*Number(item.qty))+'</strong></div>').join('')+'</div>':
  '<p><b>Création sur mesure à distance</b>\nMode : '+escapeHtml(o.mode||'Choix libre')+
- '\nCouleur : '+escapeHtml(o.color||'Non précisée')+
+ '\nCouleurs : '+escapeHtml(o.color||'Non précisées')+
  '\nOptions : '+escapeHtml(orderOptionsText(o))+
  '\nEnvies : '+escapeHtml(o.wants||'Aucune précision')+
  '\nÀ éviter : '+escapeHtml(o.avoid||'Aucune précision')+'</p>';
