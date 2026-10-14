@@ -50,6 +50,7 @@ function renderAdmin(){
   '<div class="notice" style="margin-top:20px">Démo locale : les commandes d’autres clients n’apparaissent pas ici et tes éditions ne se publient pas sur leurs appareils. La connexion Supabase sécurisée reste à réaliser.</div>';
  } else if(adminTab==='looks')renderAdminLooks();
  else if(adminTab==='portfolio')renderAdminPortfolio();
+ else if(adminTab==='community'){if(window.kianaCommunityRenderAdmin)window.kianaCommunityRenderAdmin();else el.innerHTML='<div class="notice">Chargement du module de modération…</div>'}
  else if(adminTab==='orders')renderAdminOrders();
  else if(adminTab==='presentation')renderAdminPresentation();
  else if(adminTab==='settings')renderAdminSettings();
