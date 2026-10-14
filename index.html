@@ -11,26 +11,26 @@
 <script src="kiana-v8-admin.js?v=11" defer></script>
 <script src="kiana-v10-commerce.js?v=10" defer></script>
 <script src="kiana-v10-founder.js?v=10" defer></script>
-</head>
+<link rel="stylesheet" href="kiana-community.css?v=1"></head>
 <body>
 <header class="topbar" id="topbar">
  <nav class="container nav" aria-label="Navigation principale">
   <a href="#home" class="brand" data-page="home">KIANA <em>STUDIO ✦</em></a>
   <div class="navlinks">
    <a href="#home" data-page="home">Accueil</a>
-   <a href="#shop" data-page="shop">Boutique</a><a href="#portfolio" data-page="portfolio">Lookbook</a>
+   <a href="#shop" data-page="shop">Boutique</a><a href="#portfolio" data-page="portfolio">Lookbook</a><a href="#community" data-page="community">Communauté</a>
    <a href="#commission" data-action="order-custom" data-page="commission">Sur mesure à distance</a>
    <a href="#cart" data-page="cart" class="cart-nav" aria-label="Ouvrir le panier">PANIER <span id="nav-cart-count" class="cart-count">0</span></a>
    <a href="#tracking" data-page="tracking">Suivi</a>
    <a href="#booking" data-page="booking">Rendez-vous</a>
    <a href="#about" data-page="about">À propos</a>
-   <a href="#founder" class="studio-link" data-page="founder">✦ Fonda</a>
+   <a href="#account" data-page="account">Mon compte</a><a href="#founder" class="studio-link" data-page="founder">✦ Fonda</a>
   </div>
   <button type="button" class="menu-toggle" id="menu-toggle" data-action="menu" aria-expanded="false" aria-controls="mobile-nav">☰ MENU</button>
  </nav>
  <div id="mobile-nav" class="mobile-nav container">
   <a href="#home" data-page="home">Accueil</a>
-  <a href="#shop" data-page="shop">Boutique</a><a href="#portfolio" data-page="portfolio">Lookbook</a>
+  <a href="#shop" data-page="shop">Boutique</a><a href="#portfolio" data-page="portfolio">Lookbook</a><a href="#community" data-page="community">Communauté</a><a href="#account" data-page="account">Mon compte</a>
   <a href="#commission" data-action="order-custom" data-page="commission">Sur mesure à distance</a>
   <a href="#cart" data-page="cart">Panier (<span id="mobile-cart-count">0</span>)</a>
   <a href="#tracking" data-page="tracking">Suivi</a>
@@ -119,6 +119,14 @@
 
 <section class="view" id="view-portfolio"><div class="section container"><div class="section-header"><span class="eyebrow">THE FASHION DIARY</span><h2>Le lookbook ♡</h2><p>Une galerie de photos et de réalisations à admirer. Ces photos ne sont pas à acheter : les tenues disponibles sont uniquement dans la boutique.</p></div><div id="portfolio-grid" class="polaroids"></div><div class="panel" style="margin-top:45px;text-align:center"><span class="eyebrow">TON PROCHAIN LOOK COMMENCE ICI</span><h3 class="serif" style="font-size:2rem;margin:13px">Une idée pour toi ?</h3><button class="btn btn-primary" data-action="order-custom">CRÉER MA TENUE ↗</button></div></div></section>
 
+<section class="view" id="view-community"><div class="section container">
+<div class="section-header"><span class="eyebrow">KIANA SOCIAL · OUTFIT DIARY</span><h2>La communauté ♡</h2><p>Partage ton outfit préféré et inspire les autres. Toutes les photos sont vérifiées par Kiana avant d’apparaître.</p></div>
+<div class="community-actions"><button type="button" class="btn btn-primary" id="community-post-open">+ PARTAGER MON OUTFIT</button><a href="#account" class="btn">MON COMPTE ↗</a></div>
+<div id="community-message" class="notice" hidden></div><div class="community-grid" id="community-grid"><p class="muted">Chargement des tenues…</p></div></div></section>
+<section class="view" id="view-account"><div class="section container">
+<div class="section-header"><span class="eyebrow">KIANA COMMUNITY MEMBER</span><h2>Mon compte ♡</h2><p>Inscris-toi avec ton téléphone, puis vérifie le code reçu pour publier et aimer les tenues.</p></div>
+<div id="community-auth" class="community-auth panel"><p class="muted">Chargement de la connexion…</p></div>
+<div id="community-my-posts" style="margin-top:26px"></div></div></section>
 <section class="view" id="view-commission">
  <div class="section container">
   <div class="section-header"><span class="eyebrow">YOUR STYLE · YOUR RULES</span><h2>Sur mesure, à distance.</h2><p>Une demande de création que Kiana réalise sans que tu sois présent. Tu envoies tes envies, ta couleur et tes détails. Pour être présent avec elle, prends un rendez-vous.</p></div>
@@ -234,6 +242,7 @@
    <aside class="admin-side"><h3>KIANA ✦</h3><div class="admin-menu">
     <button class="admin-link" data-admin-tab="overview" data-action="admin-tab" data-id="overview">⌂ Tableau de bord</button>
     <button class="admin-link" data-admin-tab="looks" data-action="admin-tab" data-id="looks">♡ Dressing</button>
+    <button class="admin-link" data-admin-tab="community" data-action="admin-tab" data-id="community">✦ Photos à valider</button>
     <button class="admin-link" data-admin-tab="portfolio" data-action="admin-tab" data-id="portfolio">▣ Lookbook</button>
     <button class="admin-link" data-admin-tab="orders" data-action="admin-tab" data-id="orders">▤ Commandes</button>
     <button class="admin-link" data-admin-tab="notifications" data-action="admin-tab" data-id="notifications">✧ Notifications <span id="admin-notif-count" class="notif-count" hidden>0</span></button>
@@ -259,5 +268,5 @@
  </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-</body>
+<script type="module" src="kiana-community.js?v=1"></script></body>
 </html>
