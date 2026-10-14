@@ -72,7 +72,7 @@ submitOrder=function(){
  const date=byId('order-date').value,budget=kianaBudget();
  if(name.length<2){toast('Indique ton nom.');return}
  if(!validPhone(phone)){toast('Indique un numéro de téléphone valide.');return}
- if(colorConfirmed===null||colorSelected!==colorConfirmed){toast('Choisis et valide ta couleur.');byId('color-options').scrollIntoView({block:'center',behavior:'smooth'});return}
+ if(!colorsValidated()){toast('Choisis une ou plusieurs couleurs et valide-les.');byId('color-options').scrollIntoView({block:'center',behavior:'smooth'});return}
  if(!budget||budget<1||budget>9999999){toast('Choisis un budget maximum.');return}
  if(!kianaValidDate(date))return;
  if(service==='Autre (à préciser)'&&!byId('order-other').value.trim()){toast('Précise ton service.');return}
@@ -82,10 +82,10 @@ submitOrder=function(){
  service:service==='Autre (à préciser)'?'Autre : '+byId('order-other').value.trim():service,
  lookName:'Création sur mesure à distance',items:[],price:null,total:null,
  budget,requestedDate:date,expressFee:fee,
- mode:mode==='custom'?'Customisation':'Choix libre',color:COLOR_LIST[colorConfirmed][0],
+ mode:mode==='custom'?'Customisation':'Choix libre',color:validatedColorNames().join(', '),colors:validatedColorNames(),
  options,wants:byId('order-wants').value.trim(),avoid:byId('order-avoid').value.trim()};
  if(!storeOrder(order,seq))return;
- colorSelected=null;colorConfirmed=null;
+ colorSelected=[];colorConfirmed=[];
  ['order-name','order-phone','order-wants','order-avoid','order-other','order-date','order-budget-custom'].forEach(k=>{if(byId(k))byId(k).value=''});
  byId('order-budget').value='';nav('receipt');toast('Demande '+id+' préparée ♡')
 };
@@ -93,7 +93,7 @@ const kianaReceiptAmount=o=>orderAmount(o)===null?(o.expressFee?'Sur devis + '+p
 orderSummaryText=function(o){
  return ['KIANA STUDIO · '+o.id,'Client : '+o.name,'Téléphone : '+o.phone,'Service : '+o.service,
  ...orderItems(o).map(x=>x.qty+' × '+x.name+' — '+price(Number(x.price)*Number(x.qty))),
- ...(!orderItems(o).length?['Création : '+o.lookName,'Mode : '+o.mode,'Couleur : '+o.color,'Accessoires : '+orderOptionsText(o)]:[]),
+ ...(!orderItems(o).length?['Création : '+o.lookName,'Mode : '+o.mode,'Couleurs : '+o.color,'Accessoires : '+orderOptionsText(o)]:[]),
  ...(o.budget?['Budget maximum (création) : '+price(o.budget)]:[]),
  ...(o.requestedDate?['Date souhaitée : '+o.requestedDate]:[]),
  'Supplément express : '+price(Number(o.expressFee)||0),
@@ -104,7 +104,7 @@ renderReceipt=function(){
  const o=lastReceipt;if(!o){byId('receipt-area').innerHTML='<div class="panel">Aucun reçu en cours.</div>';return}
  const items=orderItems(o);
  const itemLines=items.length?items.map(x=>receiptRow(x.qty+' × '+x.name,price(x.qty*x.price))).join(''):
- receiptRow('Création',o.lookName||'Sur mesure')+receiptRow('Formule',o.mode||'Choix libre')+receiptRow('Couleur',o.color||'À définir');
+ receiptRow('Création',o.lookName||'Sur mesure')+receiptRow('Formule',o.mode||'Choix libre')+receiptRow('Couleurs',o.color||'À définir');
  const footer=receiptRow('Livraison souhaitée',o.requestedDate||'Non renseignée')+
  (o.budget?receiptRow('Budget de la création',price(o.budget)):'')+
  receiptRow('Supplément express',price(Number(o.expressFee)||0))+
