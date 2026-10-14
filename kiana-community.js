@@ -1,13 +1,41 @@
 
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.76.1/+esm';
 const dbClient=createClient('https://foebmwxururqumoksijb.supabase.co','sb_publishable_4BmRGULwEsoz5dNqQVhiXg_rnF6sEH0',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
-let member=null,profile=null,authMode='register',communityPosts=[],likes=new Map(),myLiked=new Set(),pendingImage=null,loading=false;
+let member=null,profile=null,authMode='register',communityPosts=[],likes=new Map(),myLiked=new Set(),pendingImage=null,playerColor='#7A0909',loading=false;
 const $=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;',"'":'&#39;'}[c]));
 const isMod=()=>!!member?.app_metadata?.kiana_admin;
 const notice=(s)=>window.toast?.(s);
 const photoPath=(id)=>'https://foebmwxururqumoksijb.supabase.co/storage/v1/object/';
 const heart='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.8 4.6c-2.1-2.1-5.4-2.1-7.5 0L12 5.9l-1.3-1.3c-2.1-2.1-5.4-2.1-7.5 0s-2.1 5.4 0 7.5L12 20.9l8.8-8.8c2.1-2.1 2.1-5.4 0-7.5z"/></svg>';
+
+const outfitColors=[['Rouge cerise','#7A0909'],['Fuchsia','#D91D68'],['Rose framboise','#AC1F58'],['Violet','#6B2588'],['Prune','#372146'],['Bleu électrique','#254CA9'],['Bleu océan','#006D92'],['Émeraude','#08715C'],['Orange','#A64A16'],['Doré','#8A6E16'],['Chocolat','#62352B'],['Noir','#222222']];
+const safePlayerColor=value=>outfitColors.some(c=>c[1]===value)?value:'#7A0909';
+const skipIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5v14l10-7zM13 5v14l10-7z" fill="currentColor"/></svg>';
+function outfitPlayer(p){
+ const tone=safePlayerColor(p.player_color);
+ const image=p.url?'<img src="'+esc(p.url)+'" alt="Photo de tenue" loading="lazy">':'<div class="outfit-photo-empty">YOUR OUTFIT ♡</div>';
+ return '<div class="outfit-player" style="--player-tone:'+tone+'">'+
+ '<div class="outfit-player-screen">'+image+'</div><div class="outfit-player-controls">'+
+ '<div class="outfit-player-top"><span>KIANA STUDIO</span><span class="outfit-airplay" aria-hidden="true">◎</span></div>'+
+ '<div class="outfit-progress"><span></span><i></i></div><div class="outfit-time"><span>1:53</span><span>-1:20</span></div>'+
+ '<div class="outfit-transport" aria-hidden="true"><span class="outfit-prev">'+skipIcon+'</span><span class="outfit-pause">Ⅱ</span><span>'+skipIcon+'</span></div>'+
+ '<div class="outfit-volume"><span>◖</span><div><i></i></div><span>◗</span></div></div></div>';
+}
+function kianaRefreshPreview(url){
+ const target=$('outfit-live-preview');if(!target)return;
+ target.innerHTML=outfitPlayer({url:url||'',player_color:playerColor})
+}
+document.addEventListener('click',e=>{
+ const swatch=e.target.closest('[data-outfit-color]');if(!swatch)return;
+ e.preventDefault();
+ playerColor=safePlayerColor(swatch.dataset.outfitColor);
+ document.querySelectorAll('[data-outfit-color]').forEach(b=>b.classList.toggle('selected',b===swatch));
+ const option=outfitColors.find(x=>x[1]===playerColor);
+ const label=$('outfit-color-name');if(label)label.textContent=(option?.[0]||'Couleur')+' ✓';
+ kianaRefreshPreview($('community-preview')?.querySelector('img')?.src||'')
+});
+
 function navigateMember(){location.hash='account'}
 function submitBusy(active){loading=active;document.querySelectorAll('[data-kiana-submit]').forEach(b=>b.disabled=active)}
 function normalizeRpNumber(value){
@@ -35,7 +63,7 @@ async function signedImages(posts){
 async function loadFeed(){
  const el=$('community-grid');if(!el)return;
  el.innerHTML='<div class="community-loading">Découverte des outfits… ♡</div>';
- const {data,error}=await dbClient.from('kiana_community_posts').select('id,user_id,image_path,caption,created_at').eq('status','approved').order('created_at',{ascending:false}).limit(60);
+ const {data,error}=await dbClient.from('kiana_community_posts').select('id,user_id,image_path,caption,created_at,player_color').eq('status','approved').order('created_at',{ascending:false}).limit(60);
  if(error){el.innerHTML='<div class="notice">Impossible de charger la communauté pour le moment.</div>';return}
  communityPosts=await signedImages(data||[]);
  const ids=communityPosts.map(p=>p.id);
@@ -48,7 +76,7 @@ async function loadFeed(){
  const users=[...new Set(communityPosts.map(p=>p.user_id))];
  if(users.length){const {data:profiles}=await dbClient.from('kiana_community_profiles').select('user_id,display_name').in('user_id',users);names=new Map((profiles||[]).map(p=>[p.user_id,p.display_name]))}
  el.innerHTML=communityPosts.length?communityPosts.map(p=>
- '<article class="community-card"><img class="community-image" loading="lazy" alt="Outfit de '+esc(names.get(p.user_id)||'un membre')+'" src="'+esc(p.url||'')+'"><div class="community-card-body"><span class="eyebrow">OUTFIT DIARY ✦</span><h3>'+esc(names.get(p.user_id)||'Membre KIANA')+'</h3>'+
+ '<article class="community-card">'+outfitPlayer(p)+'<div class="community-card-body"><span class="eyebrow">OUTFIT DIARY ✦</span><h3>'+esc(names.get(p.user_id)||'Membre KIANA')+'</h3>'+
  '<p>'+esc(p.caption||'Mon outfit du jour ♡')+'</p><div class="community-meta"><small class="muted">'+new Date(p.created_at).toLocaleDateString('fr-FR')+'</small>'+
  '<button type="button" class="community-like '+(myLiked.has(p.id)?'liked':'')+'" data-community-like="'+esc(p.id)+'" aria-label="'+(myLiked.has(p.id)?'Retirer mon like':'Aimer cette photo')+'" title="'+(member?'':'Connecte-toi pour liker')+'">'+heart+' <span>'+(likes.get(p.id)||0)+'</span></button></div></div></article>').join(''):
  '<div class="panel" style="grid-column:1/-1;text-align:center"><h3 class="serif">Le dressing de la communauté ouvre bientôt ♡</h3><p class="muted">Sois la première personne à proposer ton outfit !</p></div>';
@@ -140,20 +168,23 @@ async function signOut(){await dbClient.auth.signOut();member=null;profile=null;
 function openPublish(){
  if(!member){navigateMember();notice('Connecte-toi pour partager un outfit.');return}
  if(!profile){notice('Ton profil doit être prêt avant de publier.');return}
- pendingImage=null;
+ pendingImage=null;playerColor='#7A0909';
  openModal('<span class="eyebrow">COMMUNITY FASHION DIARY</span><h2 class="serif" style="font-size:2.4rem">Partage ton outfit ♡</h2>'+
  '<p class="muted">Ta photo sera visible uniquement après validation de Kiana.</p>'+
  '<form id="community-upload-form" class="community-modal-form"><label>Ton outfit (JPG, PNG ou WebP, max. 5 Mo)</label>'+
  '<div class="community-upload"><input id="community-file" type="file" accept="image/jpeg,image/png,image/webp" required><div id="community-preview"></div></div>'+
+ '<label>Couleur du lecteur</label><div class="outfit-color-palette" id="outfit-color-palette">'+outfitColors.map(([name,hex])=>'<button type="button" class="outfit-swatch '+(hex===playerColor?'selected':'')+'" data-outfit-color="'+hex+'" style="background:'+hex+'" title="'+name+'" aria-label="'+name+'"></button>').join('')+'</div><div class="outfit-live-label" id="outfit-color-name">Rouge cerise ✓</div><div class="outfit-live-preview" id="outfit-live-preview"></div>'+
  '<label for="community-caption">Petite légende</label><textarea id="community-caption" class="field" maxlength="500" rows="3" placeholder="Une tenue, une vibe…"></textarea>'+
  '<button class="btn btn-primary" data-kiana-submit>ENVOYER POUR VALIDATION ↗</button></form>');
+ kianaRefreshPreview();
  $('community-file').onchange=async e=>{
   const file=e.target.files?.[0];if(!file)return;
   if(file.size>5*1024*1024||!/^image\/(jpeg|png|webp)$/.test(file.type)){notice('Format ou taille non acceptés.');e.target.value='';return}
   pendingImage=file;
   const imageURL=URL.createObjectURL(file);
   $('community-preview').innerHTML='<img src="'+esc(imageURL)+'" alt="Aperçu de ton outfit">';
-  $('community-preview').querySelector('img').onload=()=>URL.revokeObjectURL(imageURL)
+  $('community-preview').querySelector('img').onload=()=>URL.revokeObjectURL(imageURL);
+  kianaRefreshPreview(imageURL)
  };
  $('community-upload-form').onsubmit=publish
 }
@@ -164,7 +195,7 @@ async function publish(e){
  const path=member.id+'/'+crypto.randomUUID()+'.'+ext;
  const {error:uploadError}=await dbClient.storage.from('kiana-outfits').upload(path,file,{contentType:file.type,upsert:false});
  if(uploadError){submitBusy(false);notice('Envoi impossible : '+uploadError.message);return}
- const {error}=await dbClient.from('kiana_community_posts').insert({user_id:member.id,image_path:path,caption:$('community-caption').value.trim(),status:'pending'});
+ const {error}=await dbClient.from('kiana_community_posts').insert({user_id:member.id,image_path:path,caption:$('community-caption').value.trim(),player_color:safePlayerColor(playerColor),status:'pending'});
  submitBusy(false);
  if(error){await dbClient.storage.from('kiana-outfits').remove([path]);notice('Publication refusée.');return}
  pendingImage=null;closeModal();notice('Photo envoyée ! Kiana doit l’approuver ♡');await renderOwnPosts();if(isMod())await renderModeration()
@@ -172,10 +203,10 @@ async function publish(e){
 async function renderOwnPosts(){
  const el=$('community-my-posts');if(!el)return;
  if(!member){el.innerHTML='';return}
- const {data,error}=await dbClient.from('kiana_community_posts').select('id,image_path,caption,status,created_at').eq('user_id',member.id).order('created_at',{ascending:false}).limit(30);
+ const {data,error}=await dbClient.from('kiana_community_posts').select('id,image_path,caption,status,created_at,player_color').eq('user_id',member.id).order('created_at',{ascending:false}).limit(30);
  if(error){el.innerHTML='<p class="notice">Tes photos sont momentanément indisponibles.</p>';return}
  el.innerHTML='<h3 class="serif" style="font-size:2rem;margin:24px 0">Mes publications</h3><div class="community-grid">'+
- (await signedImages(data||[])).map(p=>'<article class="community-card"><img class="community-image" src="'+esc(p.url||'')+'" alt="Mon outfit"><div class="community-card-body"><span class="community-status '+esc(p.status)+'">'+({pending:'EN ATTENTE',approved:'PUBLIÉE',rejected:'REFUSÉE'}[p.status]||'')+'</span><p>'+esc(p.caption)+'</p></div></article>').join('')+'</div>'+
+ (await signedImages(data||[])).map(p=>'<article class="community-card">'+outfitPlayer(p)+'<div class="community-card-body"><span class="community-status '+esc(p.status)+'">'+({pending:'EN ATTENTE',approved:'PUBLIÉE',rejected:'REFUSÉE'}[p.status]||'')+'</span><p>'+esc(p.caption)+'</p></div></article>').join('')+'</div>'+
  (!(data||[]).length?'<p class="muted">Tu n’as pas encore proposé de photo ♡</p>':'')
 }
 async function toggleLike(button){
@@ -195,11 +226,11 @@ async function toggleLike(button){
 async function renderModeration(){
  const panel=$('admin-body');if(!panel||!isMod()){if(panel)panel.innerHTML='<div class="notice">La modération nécessite un compte administrateur vérifié dans Supabase.</div>';return}
  panel.innerHTML='<span class="eyebrow">KIANA · MODÉRATION</span><h3 class="serif" style="font-size:2.1rem">Outfits à valider ♡</h3><p class="muted">Seules les photos approuvées deviennent publiques.</p><div class="community-moderation" id="community-review-list"><p>Chargement des photos…</p></div>';
- const {data,error}=await dbClient.from('kiana_community_posts').select('id,user_id,image_path,caption,created_at').eq('status','pending').order('created_at',{ascending:true}).limit(50);
+ const {data,error}=await dbClient.from('kiana_community_posts').select('id,user_id,image_path,caption,created_at,player_color').eq('status','pending').order('created_at',{ascending:true}).limit(50);
  const target=$('community-review-list');if(!target)return;
  if(error){target.innerHTML='<p class="notice">Impossible de charger la modération.</p>';return}
  const posts=await signedImages(data||[]);
- target.innerHTML=posts.map(p=>'<article><img src="'+esc(p.url||'')+'" alt="Outfit en attente"><div class="details"><span class="eyebrow">À VALIDER</span><p>'+esc(p.caption||'Sans légende')+'</p>'+
+ target.innerHTML=posts.map(p=>'<article>'+outfitPlayer(p)+'<div class="details"><span class="eyebrow">À VALIDER</span><p>'+esc(p.caption||'Sans légende')+'</p>'+
  '<div class="actions"><button class="btn btn-primary btn-small" data-review="approved" data-post="'+esc(p.id)+'">APPROUVER</button><button class="btn btn-danger btn-small" data-review="rejected" data-post="'+esc(p.id)+'">REFUSER</button></div></div></article>').join('')||'<p class="notice" style="grid-column:1/-1">Aucune photo en attente. ✦</p>'
 }
 async function review(id,status,button){
