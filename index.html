@@ -11,7 +11,7 @@
 <script src="kiana-v8-admin.js?v=12" defer></script>
 <script src="kiana-v10-commerce.js?v=11" defer></script>
 <script src="kiana-v10-founder.js?v=11" defer></script>
-<link rel="stylesheet" href="kiana-community.css?v=3"></head>
+<link rel="stylesheet" href="kiana-community.css?v=3"><link rel="stylesheet" href="kiana-v11.css?v=1"></head>
 <body>
 <header class="topbar" id="topbar">
  <nav class="container nav" aria-label="Navigation principale">
@@ -24,13 +24,13 @@
    <a href="#tracking" data-page="tracking">Suivi</a>
    <a href="#booking" data-page="booking">Rendez-vous</a>
    <a href="#about" data-page="about">À propos</a>
-   <a href="#account" data-page="account">Mon compte</a><a href="#founder" class="studio-link" data-page="founder">✦ Fonda</a>
+   <a href="#account" data-page="account">Mon compte</a><a href="#myorders" data-page="myorders">Mes commandes</a><a href="#founder" class="studio-link" data-page="founder">✦ Fonda</a>
   </div>
   <button type="button" class="menu-toggle" id="menu-toggle" data-action="menu" aria-expanded="false" aria-controls="mobile-nav">☰ MENU</button>
  </nav>
  <div id="mobile-nav" class="mobile-nav container">
   <a href="#home" data-page="home">Accueil</a>
-  <a href="#shop" data-page="shop">Boutique</a><a href="#portfolio" data-page="portfolio">Lookbook</a><a href="#community" data-page="community">Communauté</a><a href="#account" data-page="account">Mon compte</a>
+  <a href="#shop" data-page="shop">Boutique</a><a href="#portfolio" data-page="portfolio">Lookbook</a><a href="#community" data-page="community">Communauté</a><a href="#account" data-page="account">Mon compte</a><a href="#myorders" data-page="myorders">Mes commandes</a>
   <a href="#commission" data-action="order-custom" data-page="commission">Sur mesure à distance</a>
   <a href="#cart" data-page="cart">Panier (<span id="mobile-cart-count">0</span>)</a>
   <a href="#tracking" data-page="tracking">Suivi</a>
@@ -127,6 +127,12 @@
 <div class="section-header"><span class="eyebrow">KIANA COMMUNITY MEMBER</span><h2>Mon compte ♡</h2><p>Crée ton compte avec ton prénom, un pseudo public, un numéro comme 444-4444 et un mot de passe. Aucun code SMS.</p></div>
 <div id="community-auth" class="community-auth panel"><p class="muted">Chargement de la connexion…</p></div>
 <div id="community-my-posts" style="margin-top:26px"></div></div></section>
+<section class="view" id="view-profile"><div class="section container">
+<div class="section-header"><span class="eyebrow">THE KIANA IDENTITY</span><h2>Mon profil ♡</h2><p>Ton espace personnel : photo, prénom, pseudo public et petite présentation.</p></div>
+<div id="kiana-profile-root" class="kiana-profile-root"><p class="muted">Chargement du profil…</p></div></div></section>
+<section class="view" id="view-myorders"><div class="section container">
+<div class="section-header"><span class="eyebrow">MY ORDERS · YOUR FASHION DIARY</span><h2>Mes commandes ♡</h2><p>Retrouve tes commandes et discute avec Kiana dans chaque commande.</p></div>
+<div id="kiana-member-orders"><p class="muted">Chargement des commandes…</p></div></div></section>
 <section class="view" id="view-commission">
  <div class="section container">
   <div class="section-header"><span class="eyebrow">YOUR STYLE · YOUR RULES</span><h2>Sur mesure, à distance.</h2><p>Une demande de création que Kiana réalise sans que tu sois présent. Tu envoies tes envies, ta couleur et tes détails. Pour être présent avec elle, prends un rendez-vous.</p></div>
@@ -245,6 +251,7 @@
     <button class="admin-link" data-admin-tab="community" data-action="admin-tab" data-id="community">✦ Photos à valider</button>
     <button class="admin-link" data-admin-tab="portfolio" data-action="admin-tab" data-id="portfolio">▣ Lookbook</button>
     <button class="admin-link" data-admin-tab="orders" data-action="admin-tab" data-id="orders">▤ Commandes</button>
+    <button class="admin-link" data-admin-tab="workplan" data-action="admin-tab" data-id="workplan">▦ Planning de travail</button>
     <button class="admin-link" data-admin-tab="notifications" data-action="admin-tab" data-id="notifications">✧ Notifications <span id="admin-notif-count" class="notif-count" hidden>0</span></button>
     <button class="admin-link" data-admin-tab="presentation" data-action="admin-tab" data-id="presentation">✎ Présentation</button>
     <button class="admin-link" data-admin-tab="settings" data-action="admin-tab" data-id="settings">⚙ Réglages</button>
@@ -268,5 +275,6 @@
  </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script type="module" src="kiana-community.js?v=3"></script></body>
+<script src="kiana-v11-members.js?v=1" defer></script>
+<script type="module" src="kiana-community.js?v=4"></script></body>
 </html>
