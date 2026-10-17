@@ -1,10 +1,14 @@
 
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.76.1/+esm';
 const dbClient=createClient('https://foebmwxururqumoksijb.supabase.co','sb_publishable_4BmRGULwEsoz5dNqQVhiXg_rnF6sEH0',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+window.kianaClient=dbClient;
 let member=null,profile=null,authMode='register',communityPosts=[],likes=new Map(),myLiked=new Set(),pendingImage=null,playerColor='#7A0909',loading=false;
 const $=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;',"'":'&#39;'}[c]));
 const isMod=()=>!!member?.app_metadata?.kiana_admin;
+window.kianaMemberUser=()=>member;
+window.kianaCurrentProfile=()=>profile;
+window.kianaIsFounder=()=>isMod();
 const notice=(s)=>window.toast?.(s);
 const photoPath=(id)=>'https://foebmwxururqumoksijb.supabase.co/storage/v1/object/';
 const heart='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.8 4.6c-2.1-2.1-5.4-2.1-7.5 0L12 5.9l-1.3-1.3c-2.1-2.1-5.4-2.1-7.5 0s-2.1 5.4 0 7.5L12 20.9l8.8-8.8c2.1-2.1 2.1-5.4 0-7.5z"/></svg>';
@@ -87,7 +91,7 @@ function renderAuth(){
   const first=String(member.user_metadata?.first_name||'').trim();
   el.innerHTML='<span class="eyebrow">MEMBRE KIANA STUDIO</span><h3 class="account-name">'+esc(profile?.display_name||member.user_metadata?.display_name||'Mon espace')+' ♡</h3>'+
   '<p class="muted">'+(first?'Bienvenue '+esc(first)+' ! ':'')+'Ton numéro reste privé. Ton pseudo est affiché sous tes photos.</p>'+
-  '<div class="admin-actions"><button class="btn btn-primary" id="community-post-from-account">+ PARTAGER MON OUTFIT</button><button class="btn" id="community-logout">SE DÉCONNECTER</button></div>';
+  '<div class="admin-actions"><a href="#profile" class="btn btn-primary">MODIFIER MON PROFIL ♡</a><a href="#myorders" class="btn">MES COMMANDES ↗</a><button class="btn" id="community-post-from-account">+ PARTAGER MON OUTFIT</button><button class="btn" id="community-logout">SE DÉCONNECTER</button></div>';
   $('community-logout').onclick=signOut;
   $('community-post-from-account').onclick=openPublish;
  }else{
@@ -157,14 +161,14 @@ async function loginMember(event){
 }
 async function ensureProfile(initialName){
  if(!member)return;
- const {data}=await dbClient.from('kiana_community_profiles').select('user_id,display_name').eq('user_id',member.id).maybeSingle();
- if(data){profile=data;return}
+ const {data}=await dbClient.from('kiana_community_profiles').select('user_id,display_name,first_name,bio,avatar_path').eq('user_id',member.id).maybeSingle();
+ if(data){profile=data;window.kianaAuthChanged?.();return}
  const name=initialName.trim().slice(0,40);
- const {data:saved,error}=await dbClient.from('kiana_community_profiles').insert({user_id:member.id,display_name:name.length>=2?name:'Membre KIANA'}).select().single();
+ const {data:saved,error}=await dbClient.from('kiana_community_profiles').insert({user_id:member.id,display_name:name.length>=2?name:'Membre KIANA',first_name:String(member.user_metadata?.first_name||'').slice(0,50)}).select().single();
  if(error){notice('Compte connecté, mais le profil n’a pas été enregistré.');return}
- profile=saved
+ profile=saved;window.kianaAuthChanged?.()
 }
-async function signOut(){await dbClient.auth.signOut();member=null;profile=null;renderAuth();$('community-my-posts').innerHTML='';await loadFeed();notice('Déconnecté ♡')}
+async function signOut(){await dbClient.auth.signOut();member=null;profile=null;renderAuth();$('community-my-posts').innerHTML='';window.kianaAuthChanged?.();await loadFeed();notice('Déconnecté ♡')}
 function openPublish(){
  if(!member){navigateMember();notice('Connecte-toi pour partager un outfit.');return}
  if(!profile){notice('Ton profil doit être prêt avant de publier.');return}
@@ -241,6 +245,7 @@ async function review(id,status,button){
  notice(status==='approved'?'Photo approuvée ♡':'Photo refusée');
  await renderModeration();await loadFeed()
 }
+window.kianaUpdateCurrentProfile=(next)=>{profile=next;renderAuth()};
 window.kianaCommunityRoute=page=>{
  if(page==='community')loadFeed();
  if(page==='account'){renderAuth();renderOwnPosts()}
@@ -258,8 +263,9 @@ dbClient.auth.onAuthStateChange((event,session)=>{
  if(event==='SIGNED_OUT')profile=null;
  setTimeout(()=>{
   renderAuth();
+  window.kianaAuthChanged?.();
   if(location.hash==='#community')void loadFeed();
   if(location.hash==='#account')void renderOwnPosts();
  },0);
 });
-renderAuth();if(location.hash==='#community')await loadFeed();if(location.hash==='#account')await renderOwnPosts();if(location.hash==='#founder'&&document.querySelector('[data-admin-tab="community"].active'))await renderModeration();
+renderAuth();window.kianaAuthChanged?.();if(location.hash==='#community')await loadFeed();if(location.hash==='#account')await renderOwnPosts();if(location.hash==='#founder'&&document.querySelector('[data-admin-tab="community"].active'))await renderModeration();
