@@ -13,7 +13,7 @@
   const c=client();return c?.storage.from('kiana-avatars').getPublicUrl(path).data?.publicUrl||''
  };
  const shortDate=value=>value?new Date(value).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):'Sans date';
- let remoteOrders=[],memberOrdersBusy=false,chatOrderId=null,chatLock=false,planAccess='';
+ let remoteOrders=[],memberOrdersBusy=false,chatOrderId=null,chatLock=false,chatTimer=null;
  function profileImage(profile,alt){
   const url=avatarUrl(profile?.avatar_path);
   return url?'<img class="km-avatar-img" src="'+escape(url)+'" alt="'+escape(alt||'Avatar')+'">':'<span class="km-avatar-initial">'+escape((profile?.display_name||'?').slice(0,1).toUpperCase())+'</span>';
@@ -128,6 +128,7 @@
   const {data:order,error:orderError}=await c.from('kiana_member_orders').select('id,order_number,user_id,order_kind,status').eq('id',orderId).maybeSingle();
   if(orderError||!order){toastMsg('Cette commande n’est pas accessible depuis ton compte.');return}
   chatOrderId=order.id;
+  if(chatTimer)clearInterval(chatTimer);
   openModal('<span class="eyebrow">KIANA · MESSAGERIE PRIVÉE</span><h2 class="serif km-chat-title">'+escape(order.order_number)+' ♡</h2>'+
    '<p class="help">Cette conversation est accessible uniquement au client et à la direction authentifiée de KIANA STUDIO.</p>'+
    '<div id="km-chat-thread" class="km-chat-thread" role="log" aria-live="polite"><p>Chargement…</p></div>'+
@@ -144,7 +145,11 @@
    if(error){toastMsg('Envoi impossible : '+error.message);button.disabled=false;return}
    $('km-chat-text').value='';button.disabled=false;await loadChat(order.id)
   };
-  await loadChat(order.id)
+  await loadChat(order.id);
+  chatTimer=setInterval(()=>{
+   if(!$('km-chat-thread')){clearInterval(chatTimer);chatTimer=null;return}
+   void loadChat(order.id)
+  },12000)
  }
  async function loadChat(id){
   if(chatOrderId!==id)return;
