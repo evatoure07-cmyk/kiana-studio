@@ -49,7 +49,7 @@ const kianaOldRenderCart=renderCart;
 renderCart=function(){kianaOldRenderCart();kianaRefreshCartFee()};
 const kianaOldRenderCommission=renderCommission;
 renderCommission=function(){kianaOldRenderCommission();kianaRefreshOrderFee()};
-submitCart=function(){
+submitCart=async function(){
  const active=cart.map(entry=>({entry,p:cartProduct(entry.id)})).filter(x=>x.p);
  if(!active.length){toast('Ajoute une tenue dans ton panier.');return}
  const name=byId('cart-name').value.trim(),phone=byId('cart-phone').value.trim(),date=byId('cart-date').value;
@@ -63,11 +63,14 @@ submitCart=function(){
  name,phone,service:'Commande boutique',lookName:items.length+' tenue'+(items.length>1?'s':''),
  items,subtotal,expressFee:fee,requestedDate:date,price:total,total,mode:'Catalogue',color:'—',options:{},
  wants:byId('cart-note').value.trim(),avoid:''};
+ const published=window.kianaPersistNewOrder?await window.kianaPersistNewOrder(order):{ok:true,local:true};
+ if(!published?.ok)return;
+ if(published.remoteId){order.id=published.number;order.remoteId=published.remoteId}
  if(!storeOrder(order,seq))return;
  cart=[];persistCart();byId('cart-checkout-form').reset();nav('receipt');
  toast('Commande '+id+' créée ♡')
 };
-submitOrder=function(){
+submitOrder=async function(){
  const name=byId('order-name').value.trim(),phone=byId('order-phone').value.trim(),service=byId('order-service').value;
  const date=byId('order-date').value,budget=kianaBudget();
  if(name.length<2){toast('Indique ton nom.');return}
@@ -84,6 +87,9 @@ submitOrder=function(){
  budget,requestedDate:date,expressFee:fee,
  mode:mode==='custom'?'Customisation':'Choix libre',color:validatedColorNames().join(', '),colors:validatedColorNames(),
  options,wants:byId('order-wants').value.trim(),avoid:byId('order-avoid').value.trim()};
+ const published=window.kianaPersistNewOrder?await window.kianaPersistNewOrder(order):{ok:true,local:true};
+ if(!published?.ok)return;
+ if(published.remoteId){order.id=published.number;order.remoteId=published.remoteId}
  if(!storeOrder(order,seq))return;
  colorSelected=[];colorConfirmed=[];
  ['order-name','order-phone','order-wants','order-avoid','order-other','order-date','order-budget-custom'].forEach(k=>{if(byId(k))byId(k).value=''});
