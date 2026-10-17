@@ -49,6 +49,7 @@ const kianaOldRenderCart=renderCart;
 renderCart=function(){kianaOldRenderCart();kianaRefreshCartFee()};
 const kianaOldRenderCommission=renderCommission;
 renderCommission=function(){kianaOldRenderCommission();kianaRefreshOrderFee()};
+let kianaCheckoutBusy=false;
 submitCart=async function(){
  const active=cart.map(entry=>({entry,p:cartProduct(entry.id)})).filter(x=>x.p);
  if(!active.length){toast('Ajoute une tenue dans ton panier.');return}
@@ -63,12 +64,19 @@ submitCart=async function(){
  name,phone,service:'Commande boutique',lookName:items.length+' tenue'+(items.length>1?'s':''),
  items,subtotal,expressFee:fee,requestedDate:date,price:total,total,mode:'Catalogue',color:'—',options:{},
  wants:byId('cart-note').value.trim(),avoid:''};
- const published=window.kianaPersistNewOrder?await window.kianaPersistNewOrder(order):{ok:true,local:true};
+ if(kianaCheckoutBusy)return;
+ kianaCheckoutBusy=true;
+ const submitButton=byId(order.kind==='boutique'?'cart-checkout-button':'order-submit');
+ if(submitButton)submitButton.disabled=true;
+ let published;
+ try{published=window.kianaPersistNewOrder?await window.kianaPersistNewOrder(order):{ok:true,local:true}}
+ catch(error){toast('Connexion impossible : la commande n’a pas été envoyée.');return}
+ finally{kianaCheckoutBusy=false;if(submitButton)submitButton.disabled=false}
  if(!published?.ok)return;
  if(published.remoteId){order.id=published.number;order.remoteId=published.remoteId}
  if(!storeOrder(order,seq))return;
  cart=[];persistCart();byId('cart-checkout-form').reset();nav('receipt');
- toast('Commande '+id+' créée ♡')
+ toast('Commande '+order.id+' créée ♡')
 };
 submitOrder=async function(){
  const name=byId('order-name').value.trim(),phone=byId('order-phone').value.trim(),service=byId('order-service').value;
@@ -87,13 +95,20 @@ submitOrder=async function(){
  budget,requestedDate:date,expressFee:fee,
  mode:mode==='custom'?'Customisation':'Choix libre',color:validatedColorNames().join(', '),colors:validatedColorNames(),
  options,wants:byId('order-wants').value.trim(),avoid:byId('order-avoid').value.trim()};
- const published=window.kianaPersistNewOrder?await window.kianaPersistNewOrder(order):{ok:true,local:true};
+ if(kianaCheckoutBusy)return;
+ kianaCheckoutBusy=true;
+ const submitButton=byId(order.kind==='boutique'?'cart-checkout-button':'order-submit');
+ if(submitButton)submitButton.disabled=true;
+ let published;
+ try{published=window.kianaPersistNewOrder?await window.kianaPersistNewOrder(order):{ok:true,local:true}}
+ catch(error){toast('Connexion impossible : la commande n’a pas été envoyée.');return}
+ finally{kianaCheckoutBusy=false;if(submitButton)submitButton.disabled=false}
  if(!published?.ok)return;
  if(published.remoteId){order.id=published.number;order.remoteId=published.remoteId}
  if(!storeOrder(order,seq))return;
  colorSelected=[];colorConfirmed=[];
  ['order-name','order-phone','order-wants','order-avoid','order-other','order-date','order-budget-custom'].forEach(k=>{if(byId(k))byId(k).value=''});
- byId('order-budget').value='';nav('receipt');toast('Demande '+id+' préparée ♡')
+ byId('order-budget').value='';nav('receipt');toast('Demande '+order.id+' préparée ♡')
 };
 const kianaReceiptAmount=o=>orderAmount(o)===null?(o.expressFee?'Sur devis + '+price(o.expressFee):'Sur devis'):price(orderAmount(o));
 orderSummaryText=function(o){
