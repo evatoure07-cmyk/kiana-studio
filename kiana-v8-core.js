@@ -72,7 +72,7 @@ function save(){
 }
 function toast(s){let t=byId('toast');t.textContent=s;t.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove('show'),3200)}
 function nav(page){
- const allowed=['home','shop','cart','portfolio','community','account','commission','tracking','booking','about','receipt','founder'];
+ const allowed=['home','shop','cart','portfolio','community','account','profile','myorders','commission','tracking','booking','about','receipt','founder'];
  if(!allowed.includes(page))page='home';
  if(page==='founder'&&!founderUnlocked){openGate();return}
  if(location.hash!=='#'+page){location.hash=page}else showRoute()
@@ -89,13 +89,14 @@ function showRoute(){
  if(page==='cart')renderCart();
  if(page==='portfolio')renderPortfolio();
  if(page==='community'||page==='account')window.kianaCommunityRoute?.(page);
+ if(page==='profile'||page==='myorders')window.kianaMembersRoute?.(page);
  if(page==='commission')renderCommission();
  if(page==='receipt')renderReceipt();
  if(page==='about')renderAbout();
  if(page==='founder')renderAdmin();
  updateCartCount();
  window.scrollTo({top:0,behavior:'auto'});
- document.title=(page==='home'?'KIANA STUDIO':({shop:'La boutique',cart:'Mon panier',portfolio:'Lookbook',community:'Communauté',account:'Mon compte',commission:'Créer ma tenue',tracking:'Suivi de commande',booking:'Rendez-vous',about:'À propos',receipt:'Mon reçu',founder:'Backstage'}[page]||'KIANA STUDIO')+' | KIANA STUDIO');
+ document.title=(page==='home'?'KIANA STUDIO':({shop:'La boutique',cart:'Mon panier',portfolio:'Lookbook',community:'Communauté',account:'Mon compte',profile:'Mon profil',myorders:'Mes commandes',commission:'Créer ma tenue',tracking:'Suivi de commande',booking:'Rendez-vous',about:'À propos',receipt:'Mon reçu',founder:'Backstage'}[page]||'KIANA STUDIO')+' | KIANA STUDIO');
 }
 function capsuleFor(p){return db.capsules.find(c=>String(c.id)===String(p.capsuleId))}
 function renderHome(){
