@@ -127,16 +127,14 @@ async function registerMember(event){
  if(password!==$('community-password-repeat').value){notice('Les mots de passe ne correspondent pas.');return}
  submitBusy(true);
  try{
-  const {data,error}=await dbClient.auth.signUp({
-   email:numberLoginEmail(number),
-   password,
-   options:{data:{first_name:first,display_name:name,kiana_rp_number:number}}
+  const response=await fetch('https://foebmwxururqumoksijb.supabase.co/functions/v1/kiana-register',{
+   method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({number,firstName:first,displayName:name,password})
   });
-  if(error){notice(authError(error,'register'));return}
-  if(!data?.session||!data?.user){
-   notice('Inscription non terminée : Kiana doit désactiver la confirmation e-mail dans Supabase pour permettre les comptes sans code.');
-   return
-  }
+  const result=await response.json().catch(()=>({error:'Réponse inattendue du serveur.'}));
+  if(!response.ok){notice(result.error||'Inscription indisponible.');return}
+  const {data,error}=await dbClient.auth.signInWithPassword({email:numberLoginEmail(number),password});
+  if(error||!data?.user){notice('Compte créé. Connecte-toi avec ton numéro et ton mot de passe.');authMode='login';renderAuth();return}
   member=data.user;await ensureProfile(name);
   renderAuth();await renderOwnPosts();await loadFeed();
   notice('Bienvenue sur KIANA STUDIO, '+first+' ♡')
