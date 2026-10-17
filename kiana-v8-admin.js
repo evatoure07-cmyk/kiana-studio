@@ -52,6 +52,7 @@ function renderAdmin(){
  else if(adminTab==='portfolio')renderAdminPortfolio();
  else if(adminTab==='community'){if(window.kianaCommunityRenderAdmin)window.kianaCommunityRenderAdmin();else el.innerHTML='<div class="notice">Chargement du module de modération…</div>'}
  else if(adminTab==='orders')renderAdminOrders();
+ else if(adminTab==='workplan'){if(window.kianaFounderPlan)void window.kianaFounderPlan();else el.innerHTML='<p class="notice">Le planning se prépare…</p>'}
  else if(adminTab==='presentation')renderAdminPresentation();
  else if(adminTab==='settings')renderAdminSettings();
 }
